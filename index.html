@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oumei Vocab ✨ 國高中英文單字大冒險</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#ff85a2;--secondary:#90f1ef;--bg:#fff5f8;--text:#4a4a4a}
+*{box-sizing:border-box}
+body{font-family:'Quicksand','Noto Sans TC',sans-serif;background:linear-gradient(135deg,#fff5f8 0%,#f0f9ff 50%,#fdf4ff 100%);color:var(--text);overflow-x:hidden;min-height:100vh}
+.retro-card{background:white;border:3px solid var(--text);box-shadow:6px 6px 0 var(--text);transition:all .15s}
+.retro-card:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--text)}
+.retro-btn{background:var(--primary);border:2.5px solid var(--text);box-shadow:3px 3px 0 var(--text);transition:all .1s;cursor:pointer;font-weight:700}
+.retro-btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--text)}
+.retro-btn:hover{filter:brightness(1.05)}
+.correct{background-color:#c6f6d5!important;border-color:#2f855a!important}
+.wrong{background-color:#fed7d7!important;border-color:#c53030!important}
+.floating{animation:floating 3s ease-in-out infinite}
+@keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.sparkle{animation:sparkle 1.5s ease-in-out infinite}
+@keyframes sparkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.2)}}
+.audio-btn{background:#fdf2f8;border:2px solid var(--text);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:transform .1s;flex-shrink:0}
+.audio-btn:active{transform:scale(.9)}
+.grade-section{border-radius:20px;overflow:hidden;margin-bottom:1.5rem}
+.grade-header{padding:12px 18px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;border-bottom:3px solid rgba(0,0,0,.1)}
+.level-chip{border:2.5px solid #333;box-shadow:3px 3px 0 #333;border-radius:14px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all .15s;background:white;min-width:0}
+.level-chip:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #333}
+.pb-outer{width:100%;height:5px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:5px}
+.pb-inner{height:100%;border-radius:999px;transition:width .3s}
+.option-btn{border:2.5px solid #333;box-shadow:3px 3px 0 #333;border-radius:14px;padding:14px 16px;font-size:1.05rem;font-weight:700;cursor:pointer;background:white;transition:all .1s;text-align:left;width:100%}
+.option-btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 #333}
+.option-btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:0 0 0 #333}
+.option-btn:disabled{cursor:default}
+.quiz-word{font-size:clamp(2.2rem,8vw,4rem)}
+/* login */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#fff5f8,#f0f9ff,#fdf4ff);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.login-card{background:white;border:4px solid #333;box-shadow:10px 10px 0 #333;border-radius:28px;padding:40px 32px;max-width:380px;width:100%;text-align:center}
+.name-input{border:3px solid #333;box-shadow:4px 4px 0 #333;border-radius:14px;padding:14px 18px;font-size:1.2rem;font-family:inherit;font-weight:700;width:100%;outline:none;text-align:center;background:#fff5f8}
+.name-input:focus{border-color:var(--primary);box-shadow:4px 4px 0 var(--primary)}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="text-6xl mb-4 floating" style="display:inline-block">🐱</div>
+    <h1 class="text-3xl font-bold text-pink-500 mb-1">Oumei Vocab</h1>
+    <p class="text-gray-400 text-sm mb-8">國高中英文單字大冒險 ✨</p>
+    <p class="font-bold text-gray-600 mb-3">請輸入你的名字</p>
+    <input id="name-input" class="name-input mb-5" type="text" placeholder="例如：小花、Eric..." maxlength="20" autocomplete="off">
+    <button id="start-btn" class="retro-btn w-full py-4 rounded-2xl text-white text-xl" onclick="vm.startWithName()">
+      出發冒險 🚀
+    </button>
+    <p id="login-error" class="text-red-400 text-sm mt-3 hidden">請輸入名字再繼續 😊</p>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" class="min-h-screen p-3 md:p-6 max-w-4xl mx-auto hidden">
+  <header class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-pink-500 flex items-center gap-2 cursor-pointer select-none" onclick="vm.showHome()">
+      <span class="text-3xl">🐱</span> Oumei Vocab
+    </h1>
+    <div id="user-info" class="text-xs md:text-sm font-bold bg-white px-3 py-2 border-2 border-black rounded-full shadow-sm cursor-pointer" onclick="vm.confirmLogout()" title="點擊登出">👤 載入中...</div>
+  </header>
+  <main id="main-content"></main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+// ── 資料 ──────────────────────────────────────────────────────
+const wordBank=[
+{id:1,en:"Friend",ch:"朋友",phr_en:"best friend",phr_ch:"最好的朋友",eg_en:"Lily is my best friend at school.",eg_ch:"莉莉是我在學校最好的朋友。",level:"國中7年級"},
+{id:2,en:"School",ch:"學校",phr_en:"go to school",phr_ch:"去上學",eg_en:"I go to school by bus every day.",eg_ch:"我每天搭公車去上學。",level:"國中7年級"},
+{id:3,en:"Classroom",ch:"教室",phr_en:"clean the classroom",phr_ch:"打掃教室",eg_en:"We clean the classroom after school.",eg_ch:"我們放學後打掃教室。",level:"國中7年級"},
+{id:4,en:"Library",ch:"圖書館",phr_en:"in the library",phr_ch:"在圖書館裡",eg_en:"You must keep quiet in the library.",eg_ch:"你在圖書館裡必須保持安靜。",level:"國中7年級"},
+{id:5,en:"Breakfast",ch:"早餐",phr_en:"have breakfast",phr_ch:"吃早餐",eg_en:"I have breakfast with my mom at seven.",eg_ch:"我七點和媽媽一起吃早餐。",level:"國中7年級"},
+{id:6,en:"Lunch",ch:"午餐",phr_en:"eat lunch",phr_ch:"吃午餐",eg_en:"What do you want to eat for lunch?",eg_ch:"你午餐想吃什麼？",level:"國中7年級"},
+{id:7,en:"Dinner",ch:"晚餐",phr_en:"cook dinner",phr_ch:"煮晚餐",eg_en:"My dad is cooking dinner in the kitchen.",eg_ch:"我爸爸正在廚房煮晚餐。",level:"國中7年級"},
+{id:8,en:"Apple",ch:"蘋果",phr_en:"red apple",phr_ch:"紅蘋果",eg_en:"The red apple is very sweet.",eg_ch:"這顆紅蘋果很甜。",level:"國中7年級"},
+{id:9,en:"Water",ch:"水",phr_en:"drink water",phr_ch:"喝水",eg_en:"Remember to drink more water.",eg_ch:"記得多喝水。",level:"國中7年級"},
+{id:10,en:"Milk",ch:"牛奶",phr_en:"drink milk",phr_ch:"喝牛奶",eg_en:"I drink a glass of milk every morning.",eg_ch:"我每天早上喝一杯牛奶。",level:"國中7年級"},
+{id:11,en:"Bread",ch:"麵包",phr_en:"piece of bread",phr_ch:"一片麵包",eg_en:"I ate a piece of bread for breakfast.",eg_ch:"我早餐吃了一片麵包。",level:"國中7年級"},
+{id:12,en:"Vegetable",ch:"蔬菜",phr_en:"eat vegetables",phr_ch:"吃蔬菜",eg_en:"Eating vegetables is good for your health.",eg_ch:"吃蔬菜對你的健康有好處。",level:"國中7年級"},
+{id:13,en:"Fruit",ch:"水果",phr_en:"fresh fruit",phr_ch:"新鮮水果",eg_en:"We have some fresh fruit after dinner.",eg_ch:"我們晚飯後吃一些新鮮水果。",level:"國中7年級"},
+{id:14,en:"Animal",ch:"動物",phr_en:"favorite animal",phr_ch:"最喜歡的動物",eg_en:"What is your favorite animal?",eg_ch:"你最喜歡的動物是什麼？",level:"國中7年級"},
+{id:15,en:"Dog",ch:"狗",phr_en:"pet dog",phr_ch:"寵物狗",eg_en:"I have a pet dog named Lucky.",eg_ch:"我有一隻名叫 Lucky 的寵物狗。",level:"國中7年級"},
+{id:16,en:"Cat",ch:"貓",phr_en:"cute cat",phr_ch:"可愛的貓",eg_en:"My cat likes to sleep on the sofa.",eg_ch:"我的貓喜歡睡在沙發上。",level:"國中7年級"},
+{id:17,en:"Bird",ch:"鳥",phr_en:"small bird",phr_ch:"小鳥",eg_en:"A small bird is singing on the tree.",eg_ch:"一隻小鳥正在樹上唱歌。",level:"國中7年級"},
+{id:18,en:"Pencil",ch:"鉛筆",phr_en:"pencil case",phr_ch:"鉛筆盒",eg_en:"The pencil is in the pencil case.",eg_ch:"鉛筆在鉛筆盒裡。",level:"國中7年級"},
+{id:19,en:"Book",ch:"書",phr_en:"read a book",phr_ch:"看書",eg_en:"I like to read a book before bed.",eg_ch:"我喜歡睡前看書。",level:"國中7年級"},
+{id:20,en:"Notebook",ch:"筆記本",phr_en:"write in a notebook",phr_ch:"寫在筆記本上",eg_en:"Please write the words in your notebook.",eg_ch:"請把單字寫在筆記本上。",level:"國中7年級"},
+{id:21,en:"Table",ch:"桌子",phr_en:"on the table",phr_ch:"在桌子上",eg_en:"The keys are on the table.",eg_ch:"鑰匙在桌子上。",level:"國中7年級"},
+{id:22,en:"Chair",ch:"椅子",phr_en:"sit on a chair",phr_ch:"坐在椅子上",eg_en:"Please sit on the chair.",eg_ch:"請坐在椅子上。",level:"國中7年級"},
+{id:23,en:"Door",ch:"門",phr_en:"open the door",phr_ch:"開門",eg_en:"Could you please open the door for me?",eg_ch:"可以請你幫我開門嗎？",level:"國中7年級"},
+{id:24,en:"Window",ch:"窗戶",phr_en:"close the window",phr_ch:"關窗戶",eg_en:"It is cold; please close the window.",eg_ch:"天氣冷，請關窗戶。",level:"國中7年級"},
+{id:25,en:"Time",ch:"時間",phr_en:"on time",phr_ch:"準時",eg_en:"My father always goes to work on time.",eg_ch:"我爸爸上班總是很準時。",level:"國中7年級"},
+{id:26,en:"Watch",ch:"手錶/手錶",phr_en:"wear a watch",phr_ch:"戴手錶",eg_en:"I wear a watch to know the time.",eg_ch:"我戴手錶是為了知道時間。",level:"國中7年級"},
+{id:27,en:"Homework",ch:"功課",phr_en:"do homework",phr_ch:"寫功課",eg_en:"I usually do my homework after school.",eg_ch:"我通常放學後寫功課。",level:"國中7年級"},
+{id:28,en:"English",ch:"英文",phr_en:"speak English",phr_ch:"說英文",eg_en:"We speak English in our English class.",eg_ch:"我們在英文課說英文。",level:"國中7年級"},
+{id:29,en:"Chinese",ch:"中文",phr_en:"learn Chinese",phr_ch:"學中文",eg_en:"My American friend is learning Chinese.",eg_ch:"我的美國朋友正在學中文。",level:"國中7年級"},
+{id:30,en:"Happy",ch:"快樂的",phr_en:"happy birthday",phr_ch:"生日快樂",eg_en:"Happy birthday to you, my dear friend.",eg_ch:"親愛的朋友，祝你生日快樂。",level:"國中7年級"},
+{id:31,en:"Sad",ch:"悲傷的",phr_en:"feel sad",phr_ch:"感到悲傷",eg_en:"Don\'t feel sad; everything will be okay.",eg_ch:"不要感到難過；一切都會沒事的。",level:"國中7年級"},
+{id:32,en:"Tired",ch:"累的",phr_en:"feel tired",phr_ch:"感到累",eg_en:"I feel tired after running for an hour.",eg_ch:"跑了一小時步後我感到很累。",level:"國中7年級"},
+{id:33,en:"Hungry",ch:"餓的",phr_en:"be hungry",phr_ch:"肚子餓",eg_en:"I am hungry; let\'s get something to eat.",eg_ch:"我餓了；我們去拿點東西吃吧。",level:"國中7年級"},
+{id:34,en:"Thirsty",ch:"渴的",phr_en:"be thirsty",phr_ch:"口渴",eg_en:"I am thirsty; can I have some water?",eg_ch:"我渴了；可以給我一些水嗎？",level:"國中7年級"},
+{id:35,en:"Tall",ch:"高的",phr_en:"tall building",phr_ch:"高樓",eg_en:"Taipei 101 is a very tall building.",eg_ch:"台北 101 是一棟非常高的建築。",level:"國中7年級"},
+{id:36,en:"Short",ch:"矮的/短的",phr_en:"short hair",phr_ch:"短髮",eg_en:"The girl has short hair and big eyes.",eg_ch:"那個女孩有短髮和大眼睛。",level:"國中7年級"},
+{id:37,en:"Big",ch:"大的",phr_en:"big city",phr_ch:"大城市",eg_en:"Taipei is a very big city.",eg_ch:"台北是一個非常大的城市。",level:"國中7年級"},
+{id:38,en:"Small",ch:"小的",phr_en:"small box",phr_ch:"小盒子",eg_en:"There is a gift in the small box.",eg_ch:"小盒子裡有一個禮物。",level:"國中7年級"},
+{id:39,en:"Old",ch:"老的/舊的",phr_en:"old man",phr_ch:"老人",eg_en:"The old man is walking in the park.",eg_ch:"那位老先生正在公園散步。",level:"國中7年級"},
+{id:40,en:"New",ch:"新的",phr_en:"new bicycle",phr_ch:"新腳踏車",eg_en:"My parents bought me a new bicycle.",eg_ch:"我父母買給我一輛新腳踏車。",level:"國中7年級"},
+{id:41,en:"Hot",ch:"熱的",phr_en:"hot weather",phr_ch:"炎熱的天氣",eg_en:"I like to eat ice cream in hot weather.",eg_ch:"我喜歡在炎熱的天氣吃冰淇淋。",level:"國中7年級"},
+{id:42,en:"Cold",ch:"冷的",phr_en:"cold water",phr_ch:"冷水",eg_en:"Don\'t drink cold water after exercise.",eg_ch:"運動後不要喝冷水。",level:"國中7年級"},
+{id:43,en:"Sunny",ch:"晴朗的",phr_en:"sunny day",phr_ch:"晴天",eg_en:"It is a sunny day; let\'s go for a picnic.",eg_ch:"今天是晴天；我們去野餐吧。",level:"國中7年級"},
+{id:44,en:"Rainy",ch:"下雨的",phr_en:"rainy season",phr_ch:"雨季",eg_en:"It is usually rainy in May in Taiwan.",eg_ch:"台灣的五月通常是雨季。",level:"國中7年級"},
+{id:45,en:"Windy",ch:"風大的",phr_en:"windy day",phr_ch:"大風天",eg_en:"It is very windy today; wear a coat.",eg_ch:"今天風很大；穿件外套。",level:"國中7年級"},
+{id:46,en:"Color",ch:"顏色",phr_en:"bright color",phr_ch:"鮮艷的顏色",eg_en:"I like to wear clothes with bright colors.",eg_ch:"我喜歡穿顏色鮮艷的衣服。",level:"國中7年級"},
+{id:47,en:"Red",ch:"紅色",phr_en:"red rose",phr_ch:"紅玫瑰",eg_en:"My mom likes red roses very much.",eg_ch:"我媽媽非常喜歡紅玫瑰。",level:"國中7年級"},
+{id:48,en:"Blue",ch:"藍色",phr_en:"blue sky",phr_ch:"藍天",eg_en:"Look! The blue sky is so beautiful today.",eg_ch:"看！今天的藍天真漂亮。",level:"國中7年級"},
+{id:49,en:"Green",ch:"綠色",phr_en:"green tree",phr_ch:"綠樹",eg_en:"There are many green trees in the park.",eg_ch:"公園裡有很多綠樹。",level:"國中7年級"},
+{id:50,en:"Yellow",ch:"黃色",phr_en:"yellow banana",phr_ch:"黃香蕉",eg_en:"The yellow banana is very delicious.",eg_ch:"黃色香蕉非常美味。",level:"國中7年級"},
+{id:51,en:"Black",ch:"黑色",phr_en:"black cat",phr_ch:"黑貓",eg_en:"A black cat is sitting on the wall.",eg_ch:"一隻黑貓正坐在牆上。",level:"國中7年級"},
+{id:52,en:"White",ch:"白色",phr_en:"white dress",phr_ch:"白洋裝",eg_en:"The girl is wearing a white dress today.",eg_ch:"那個女孩今天穿著一件白洋裝。",level:"國中7年級"},
+{id:53,en:"Face",ch:"臉",phr_en:"wash my face",phr_ch:"洗臉",eg_en:"I wash my face every morning.",eg_ch:"我每天早上洗臉。",level:"國中7年級"},
+{id:54,en:"Eye",ch:"眼睛",phr_en:"close your eyes",phr_ch:"閉上你的眼睛",eg_en:"Please close your eyes and make a wish.",eg_ch:"請閉上眼睛許個願。",level:"國中7年級"},
+{id:55,en:"Ear",ch:"耳朵",phr_en:"listen with ears",phr_ch:"用耳朵聽",eg_en:"We listen to music with our ears.",eg_ch:"我們用耳朵聽音樂。",level:"國中7年級"},
+{id:56,en:"Nose",ch:"鼻子",phr_en:"a long nose",phr_ch:"長鼻子",eg_en:"The elephant has a very long nose.",eg_ch:"大象有很長的鼻子。",level:"國中7年級"},
+{id:57,en:"Mouth",ch:"嘴巴",phr_en:"open your mouth",phr_ch:"張開你的嘴",eg_en:"The doctor asked me to open my mouth.",eg_ch:"醫生叫我張開嘴巴。",level:"國中7年級"},
+{id:58,en:"Hand",ch:"手",phr_en:"wash hands",phr_ch:"洗手",eg_en:"Remember to wash your hands before meals.",eg_ch:"記得餐前洗手。",level:"國中7年級"},
+{id:59,en:"Leg",ch:"腿",phr_en:"long legs",phr_ch:"長腿",eg_en:"That basketball player has very long legs.",eg_ch:"那位籃球員有很長的腿。",level:"國中7年級"},
+{id:60,en:"Foot",ch:"腳",phr_en:"on foot",phr_ch:"走路",eg_en:"I go to school on foot every day.",eg_ch:"我每天走路去上學。",level:"國中7年級"},
+{id:61,en:"Head",ch:"頭",phr_en:"shake my head",phr_ch:"搖頭",eg_en:"I shook my head because I didn\'t know.",eg_ch:"我搖了搖頭，因為我不知道。",level:"國中7年級"},
+{id:62,en:"Body",ch:"身體",phr_en:"keep the body warm",phr_ch:"保持身體溫暖",eg_en:"Wear more clothes to keep your body warm.",eg_ch:"多穿點衣服來保持身體溫暖。",level:"國中7年級"},
+{id:63,en:"Morning",ch:"早上",phr_en:"good morning",phr_ch:"早安",eg_en:"Good morning! Did you sleep well?",eg_ch:"早安！你睡得好嗎？",level:"國中7年級"},
+{id:64,en:"Afternoon",ch:"下午",phr_en:"in the afternoon",phr_ch:"在下午",eg_en:"I have an English class in the afternoon.",eg_ch:"我下午有一堂英文課。",level:"國中7年級"},
+{id:65,en:"Evening",ch:"傍晚/晚上",phr_en:"good evening",phr_ch:"晚安(問候用)",eg_en:"We usually watch TV in the evening.",eg_ch:"我們通常在晚上看電視。",level:"國中7年級"},
+{id:66,en:"Night",ch:"夜晚",phr_en:"at night",phr_ch:"在夜晚",eg_en:"The stars are very bright at night.",eg_ch:"夜晚的星星非常明亮。",level:"國中7年級"},
+{id:67,en:"Today",ch:"今天",phr_en:"today is Monday",phr_ch:"今天是星期一",eg_en:"Today is Monday; we have school.",eg_ch:"今天是星期一；我們要上學。",level:"國中7年級"},
+{id:68,en:"Tomorrow",ch:"明天",phr_en:"see you tomorrow",phr_ch:"明天見",eg_en:"See you tomorrow! Have a nice day.",eg_ch:"明天見！祝你有美好的一天。",level:"國中7年級"},
+{id:69,en:"Birthday",ch:"生日",phr_en:"birthday party",phr_ch:"生日派對",eg_en:"Are you coming to my birthday party?",eg_ch:"你會來參加我的生日派對嗎？",level:"國中7年級"},
+{id:70,en:"Gift",ch:"禮物",phr_en:"birthday gift",phr_ch:"生日禮物",eg_en:"Thank you for the wonderful birthday gift.",eg_ch:"謝謝你送的超讚生日禮物。",level:"國中7年級"},
+{id:71,en:"Party",ch:"派對",phr_en:"join a party",phr_ch:"參加派對",eg_en:"We had a lot of fun at the party.",eg_ch:"我們在派對上玩得很開心。",level:"國中7年級"},
+{id:72,en:"Song",ch:"歌",phr_en:"sing a song",phr_ch:"唱歌",eg_en:"Let\'s sing a song together.",eg_ch:"讓我們一起唱首歌吧。",level:"國中7年級"},
+{id:73,en:"Music",ch:"音樂",phr_en:"listen to music",phr_ch:"聽音樂",eg_en:"I like to listen to music in my free time.",eg_ch:"我喜歡在空閒時間聽音樂。",level:"國中7年級"},
+{id:74,en:"Sports",ch:"運動",phr_en:"play sports",phr_ch:"做運動",eg_en:"My brother likes to play sports after school.",eg_ch:"我弟弟喜歡放學後做運動。",level:"國中7年級"},
+{id:75,en:"Game",ch:"遊戲/比賽",phr_en:"play a game",phr_ch:"玩遊戲",eg_en:"Let\'s play a video game together.",eg_ch:"我們一起玩電子遊戲吧。",level:"國中7年級"},
+{id:76,en:"Ball",ch:"球",phr_en:"play ball",phr_ch:"打球",eg_en:"Do you want to play ball with us?",eg_ch:"你想和我們一起打球嗎？",level:"國中7年級"},
+{id:77,en:"Park",ch:"公園",phr_en:"go to the park",phr_ch:"去公園",eg_en:"We often go to the park on weekends.",eg_ch:"我們週末常去公園。",level:"國中7年級"},
+{id:78,en:"Bus",ch:"公車",phr_en:"take a bus",phr_ch:"搭公車",eg_en:"I take a bus to go to the library.",eg_ch:"我搭公車去圖書館。",level:"國中7年級"},
+{id:79,en:"Car",ch:"車子",phr_en:"drive a car",phr_ch:"開車",eg_en:"My father drives a car to work.",eg_ch:"我爸爸開車上班。",level:"國中7年級"},
+{id:80,en:"Train",ch:"火車",phr_en:"by train",phr_ch:"搭火車",eg_en:"We went to Hualien by train last summer.",eg_ch:"去年夏天我們搭火車去花蓮。",level:"國中7年級"},
+{id:81,en:"Shop",ch:"商店/購物",phr_en:"go shopping",phr_ch:"去購物",eg_en:"My mother likes to go shopping on Sundays.",eg_ch:"我媽媽喜歡在星期日去購物。",level:"國中7年級"},
+{id:82,en:"Kitchen",ch:"廚房",phr_en:"in the kitchen",phr_ch:"在廚房裡",eg_en:"Mom is washing the dishes in the kitchen.",eg_ch:"媽媽正在廚房洗碗。",level:"國中7年級"},
+{id:83,en:"Bed",ch:"床",phr_en:"go to bed",phr_ch:"去睡覺",eg_en:"It is late; you should go to bed now.",eg_ch:"很晚了；你現在應該去睡覺了。",level:"國中7年級"},
+{id:84,en:"Sleep",ch:"睡覺",phr_en:"sleep well",phr_ch:"睡得好",eg_en:"I hope you sleep well tonight.",eg_ch:"希望你今晚睡得好。",level:"國中7年級"},
+{id:85,en:"Help",ch:"幫助",phr_en:"help someone",phr_ch:"幫助某人",eg_en:"Thank you for your help.",eg_ch:"謝謝你的幫助。",level:"國中7年級"},
+{id:86,en:"Cook",ch:"煮/廚師",phr_en:"cook a meal",phr_ch:"煮一餐",eg_en:"Can you help me cook a meal?",eg_ch:"你能幫我煮一頓飯嗎？",level:"國中7年級"},
+{id:87,en:"Wash",ch:"洗",phr_en:"wash the car",phr_ch:"洗車",eg_en:"We washed the car together yesterday.",eg_ch:"我們昨天一起洗了車。",level:"國中7年級"},
+{id:88,en:"Speak",ch:"說",phr_en:"speak loudly",phr_ch:"大聲說話",eg_en:"Please speak loudly; I can\'t hear you.",eg_ch:"請大聲一點；我聽不到你說話。",level:"國中7年級"},
+{id:89,en:"Write",ch:"寫",phr_en:"write a letter",phr_ch:"寫信",eg_en:"I want to write a letter to my friend.",eg_ch:"我想寫信給我的朋友。",level:"國中7年級"},
+{id:90,en:"Run",ch:"跑",phr_en:"run fast",phr_ch:"跑得快",eg_en:"The boy can run very fast.",eg_ch:"那個男孩可以跑得很快。",level:"國中7年級"},
+{id:91,en:"Jump",ch:"跳",phr_en:"jump high",phr_ch:"跳得高",eg_en:"Cats can jump very high.",eg_ch:"貓可以跳得很高。",level:"國中7年級"},
+{id:92,en:"Walk",ch:"走路",phr_en:"walk to school",phr_ch:"走路去上學",eg_en:"It is healthy to walk to school.",eg_ch:"走路去上學是很健康的。",level:"國中7年級"},
+{id:93,en:"Love",ch:"愛",phr_en:"love my family",phr_ch:"愛我的家人",eg_en:"I love my family very much.",eg_ch:"我非常愛我的家人。",level:"國中7年級"},
+{id:94,en:"Work",ch:"工作",phr_en:"work hard",phr_ch:"努力工作",eg_en:"You must work hard to get good grades.",eg_ch:"你必須努力讀書才能拿到好成績。",level:"國中7年級"},
+{id:95,en:"Great",ch:"棒的/偉大的",phr_en:"have a great time",phr_ch:"度過美好時光",eg_en:"We had a great time at the beach.",eg_ch:"我們在海邊玩得很開心。",level:"國中7年級"},
+{id:96,en:"Experience",ch:"經驗",phr_en:"have experience",phr_ch:"有經驗",eg_en:"He has a lot of experience in teaching English.",eg_ch:"他在教英文方面有很豐富的經驗。",level:"國中8年級"},
+{id:97,en:"Nervous",ch:"緊張的",phr_en:"feel nervous",phr_ch:"感到緊張",eg_en:"I always feel nervous before a big test.",eg_ch:"在大考之前我總是感到緊張。",level:"國中8年級"},
+{id:98,en:"Interesting",ch:"有趣的",phr_en:"sound interesting",phr_ch:"聽起來有趣",eg_en:"The story you told sounds really interesting.",eg_ch:"你說的故事聽起來真的很有趣。",level:"國中8年級"},
+{id:99,en:"Weather",ch:"天氣",phr_en:"check the weather",phr_ch:"查看天氣",eg_en:"Remember to check the weather before you go out.",eg_ch:"出門前記得查看天氣。",level:"國中8年級"},
+{id:100,en:"Future",ch:"未來",phr_en:"in the future",phr_ch:"在未來",eg_en:"What do you want to be in the future?",eg_ch:"你未來想當什麼？",level:"國中8年級"},
+{id:101,en:"Hobby",ch:"嗜好",phr_en:"take up a hobby",phr_ch:"開始一項嗜好",eg_en:"He decided to take up a new hobby, like painting.",eg_ch:"他決定開始一項新嗜好，例如繪畫。",level:"國中8年級"},
+{id:102,en:"Chore",ch:"家事",phr_en:"do household chores",phr_ch:"做家事",eg_en:"Children should help their parents do household chores.",eg_ch:"小孩應該幫父母做家事。",level:"國中8年級"},
+{id:103,en:"Healthy",ch:"健康的",phr_en:"stay healthy",phr_ch:"保持健康",eg_en:"Eating more vegetables helps you stay healthy.",eg_ch:"多吃蔬菜有助於你保持健康。",level:"國中8年級"},
+{id:104,en:"Delicious",ch:"美味的",phr_en:"look delicious",phr_ch:"看起來美味",eg_en:"The chocolate cake on the table looks delicious.",eg_ch:"桌上的巧克力蛋糕看起來很美味。",level:"國中8年級"},
+{id:105,en:"Excited",ch:"感到興奮的",phr_en:"be excited about",phr_ch:"對...感到興奮",eg_en:"They are excited about their trip to Japan.",eg_ch:"他們對去日本旅行感到很興奮。",level:"國中8年級"},
+{id:106,en:"Afraid",ch:"害怕的",phr_en:"be afraid of",phr_ch:"害怕...",eg_en:"Many children are afraid of the dark.",eg_ch:"許多小孩害怕黑暗。",level:"國中8年級"},
+{id:107,en:"Believe",ch:"相信",phr_en:"believe in",phr_ch:"相信/信任",eg_en:"If you want to win, you must believe in yourself.",eg_ch:"如果你想贏，你必須相信自己。",level:"國中8年級"},
+{id:108,en:"Decide",ch:"決定",phr_en:"decide to do",phr_ch:"決定做...",eg_en:"She decided to study harder after the meeting.",eg_ch:"會議過後，她決定要更努力讀書。",level:"國中8年級"},
+{id:109,en:"Forget",ch:"忘記",phr_en:"forget to bring",phr_ch:"忘記帶",eg_en:"Don\'t forget to bring your umbrella.",eg_ch:"別忘了帶傘。",level:"國中8年級"},
+{id:110,en:"Medicine",ch:"藥",phr_en:"take medicine",phr_ch:"吃藥",eg_en:"You should take medicine and rest for three days.",eg_ch:"你應該吃藥並休息三天。",level:"國中8年級"},
+{id:111,en:"Remember",ch:"記得",phr_en:"remember to turn off",phr_ch:"記得關掉",eg_en:"Please remember to turn off the lights when you leave.",eg_ch:"離開時請記得關燈。",level:"國中8年級"},
+{id:112,en:"Terrible",ch:"可怕的/糟糕的",phr_en:"have a terrible headache",phr_ch:"頭痛得很厲害",eg_en:"I had a terrible headache yesterday morning.",eg_ch:"昨天早上我頭痛得很厲害。",level:"國中8年級"},
+{id:113,en:"Careful",ch:"小心的",phr_en:"be careful with",phr_ch:"對...小心",eg_en:"You should be careful with the glass bottles.",eg_ch:"你應該對這些玻璃瓶小心一點。",level:"國中8年級"},
+{id:114,en:"Difficult",ch:"困難的",phr_en:"too difficult for",phr_ch:"對...太難",eg_en:"This math problem is too difficult for me.",eg_ch:"這道數學題對我來說太難了。",level:"國中8年級"},
+{id:115,en:"Enough",ch:"足夠的",phr_en:"have enough time",phr_ch:"有足夠的時間",eg_en:"We don\'t have enough time to finish the work.",eg_ch:"我們沒有足夠的時間完成工作。",level:"國中8年級"},
+{id:116,en:"Important",ch:"重要的",phr_en:"an important message",phr_ch:"重要的訊息",eg_en:"He sent me an important message this morning.",eg_ch:"他今天早上寄給我一個重要的訊息。",level:"國中8年級"},
+{id:117,en:"Mistake",ch:"錯誤",phr_en:"make a mistake",phr_ch:"犯錯",eg_en:"Everyone makes a mistake once in a while.",eg_ch:"每個人偶爾都會犯錯。",level:"國中8年級"},
+{id:118,en:"Popular",ch:"受歡迎的",phr_en:"become popular",phr_ch:"變得受歡迎",eg_en:"The singer became popular after his first song.",eg_ch:"那位歌手在第一首歌之後變得受歡迎。",level:"國中8年級"},
+{id:119,en:"Quiet",ch:"安靜的",phr_en:"keep quiet",phr_ch:"保持安靜",eg_en:"Please keep quiet in the library.",eg_ch:"請在圖書館保持安靜。",level:"國中8年級"},
+{id:120,en:"Special",ch:"特別的",phr_en:"on a special day",phr_ch:"在特別的日子",eg_en:"My father gave me a gift on a special day.",eg_ch:"我父親在一個特別的日子送我禮物。",level:"國中8年級"},
+{id:121,en:"Strange",ch:"奇怪的",phr_en:"hear a strange noise",phr_ch:"聽到奇怪的噪音",eg_en:"I heard a strange noise from the kitchen.",eg_ch:"我聽到廚房傳來一陣奇怪的聲音。",level:"國中8年級"},
+{id:122,en:"Surprised",ch:"感到驚訝的",phr_en:"be surprised at",phr_ch:"對...感到驚訝",eg_en:"I was surprised at the news of his passing.",eg_ch:"我對他過世的消息感到驚訝。",level:"國中8年級"},
+{id:123,en:"Together",ch:"一起",phr_en:"work together",phr_ch:"一起工作",eg_en:"Let\'s work together to finish this project.",eg_ch:"讓我們一起努力完成這個企劃。",level:"國中8年級"},
+{id:124,en:"Vacation",ch:"假期",phr_en:"on vacation",phr_ch:"在度假",eg_en:"My family is on vacation in Taitung now.",eg_ch:"我們全家現在在台東度假。",level:"國中8年級"},
+{id:125,en:"Without",ch:"沒有",phr_en:"without saying a word",phr_ch:"不發一言地",eg_en:"He left the room without saying a word.",eg_ch:"他一句話也沒說就離開了房間。",level:"國中8年級"},
+{id:126,en:"Borrow",ch:"借入",phr_en:"borrow a book from",phr_ch:"向...借書",eg_en:"I want to borrow a book from the library.",eg_ch:"我想從圖書館借一本書。",level:"國中8年級"},
+{id:127,en:"Lend",ch:"借出",phr_en:"lend something to",phr_ch:"借給某人某物",eg_en:"Can you lend your dictionary to me?",eg_ch:"你能把字典借給我嗎？",level:"國中8年級"},
+{id:128,en:"Collect",ch:"收集",phr_en:"collect stamps",phr_ch:"集郵",eg_en:"My grandfather used to collect stamps.",eg_ch:"我祖父以前常集郵。",level:"國中8年級"},
+{id:129,en:"Common",ch:"常見的",phr_en:"a common cold",phr_ch:"普通感冒",eg_en:"Drinking warm water is good for a common cold.",eg_ch:"喝溫水對普通感冒有好處。",level:"國中8年級"},
+{id:130,en:"Different",ch:"不同的",phr_en:"be different from",phr_ch:"與...不同",eg_en:"His idea is different from mine.",eg_ch:"他的想法與我的不同。",level:"國中8年級"},
+{id:131,en:"Favorite",ch:"最喜歡的",phr_en:"my favorite movie",phr_ch:"我最喜歡的電影",eg_en:"Iron Man is my favorite movie of all time.",eg_ch:"《鋼鐵人》是我一直以來最喜歡的電影。",level:"國中8年級"},
+{id:132,en:"Festival",ch:"節慶",phr_en:"Moon Festival",phr_ch:"中秋節",eg_en:"We usually eat moon cakes during the Moon Festival.",eg_ch:"我們通常在中秋節吃月餅。",level:"國中8年級"},
+{id:133,en:"Garage",ch:"車庫",phr_en:"park in the garage",phr_ch:"停在車庫裡",eg_en:"My dad parks the car in the garage every night.",eg_ch:"我爸每晚把車停在車庫裡。",level:"國中8年級"},
+{id:134,en:"Helpful",ch:"有幫助的",phr_en:"be helpful to",phr_ch:"對...有幫助",eg_en:"This website is very helpful to students.",eg_ch:"這個網站對學生非常有幫助。",level:"國中8年級"},
+{id:135,en:"Instead",ch:"代替",phr_en:"instead of",phr_ch:"而不是",eg_en:"He played basketball instead of doing homework.",eg_ch:"他去打籃球而不是寫作業。",level:"國中8年級"},
+{id:136,en:"Journey",ch:"旅程",phr_en:"a long journey",phr_ch:"長途旅行",eg_en:"They began a long journey to the mountains.",eg_ch:"他們開始了前往山區的長途旅行。",level:"國中8年級"},
+{id:137,en:"Language",ch:"語言",phr_en:"learn a language",phr_ch:"學習語言",eg_en:"It is fun to learn a new language.",eg_ch:"學習新語言很有趣。",level:"國中8年級"},
+{id:138,en:"Meaning",ch:"意義",phr_en:"the meaning of",phr_ch:"...的意思/意義",eg_en:"Do you know the meaning of this English word?",eg_ch:"你知道這個英文單字的意思嗎？",level:"國中8年級"},
+{id:139,en:"Neighbor",ch:"鄰居",phr_en:"friendly neighbor",phr_ch:"友善的鄰居",eg_en:"We are lucky to have such a friendly neighbor.",eg_ch:"我們很幸運有這麼友善的鄰居。",level:"國中8年級"},
+{id:140,en:"Obey",ch:"遵守/服從",phr_en:"obey the rules",phr_ch:"遵守規則",eg_en:"Everyone should obey the school rules.",eg_ch:"每個人都應該遵守校規。",level:"國中8年級"},
+{id:141,en:"Practice",ch:"練習",phr_en:"practice speaking",phr_ch:"練習說",eg_en:"You should practice speaking English every day.",eg_ch:"你應該每天練習說英文。",level:"國中8年級"},
+{id:142,en:"Question",ch:"問題",phr_en:"ask a question",phr_ch:"提問",eg_en:"Feel free to ask a question if you don\'t understand.",eg_ch:"如果你不理解，隨時可以提問。",level:"國中8年級"},
+{id:143,en:"Reason",ch:"原因",phr_en:"the reason for",phr_ch:"...的原因",eg_en:"What was the reason for your absence?",eg_ch:"你缺席的原因是什麼？",level:"國中8年級"},
+{id:144,en:"Scientist",ch:"科學家",phr_en:"become a scientist",phr_ch:"成為科學家",eg_en:"His dream is to become a famous scientist.",eg_ch:"他的夢想是成為一名著名的科學家。",level:"國中8年級"},
+{id:145,en:"Through",ch:"穿過/透過",phr_en:"go through the tunnel",phr_ch:"穿過隧道",eg_en:"The train is going through the tunnel now.",eg_ch:"火車現在正穿過隧道。",level:"國中8年級"},
+{id:146,en:"Understand",ch:"理解",phr_en:"deeply understand",phr_ch:"深刻理解",eg_en:"I don\'t think you deeply understand the problem.",eg_ch:"我不認為你深刻理解這個問題。",level:"國中8年級"},
+{id:147,en:"Wonderful",ch:"棒極了",phr_en:"have a wonderful time",phr_ch:"度過美好時光",eg_en:"We had a wonderful time at the party last night.",eg_ch:"我們昨晚在派對上度過了美好的時光。",level:"國中8年級"},
+{id:148,en:"Yesterday",ch:"昨天",phr_en:"yesterday afternoon",phr_ch:"昨天下午",eg_en:"It rained heavily yesterday afternoon.",eg_ch:"昨天下午雨下得很大。",level:"國中8年級"},
+{id:149,en:"Abroad",ch:"在國外",phr_en:"go abroad",phr_ch:"出國",eg_en:"My sister wants to go abroad to study art.",eg_ch:"我姐姐想出國學習藝術。",level:"國中8年級"},
+{id:150,en:"Active",ch:"活躍的",phr_en:"be active in",phr_ch:"在...方面很活躍",eg_en:"He is very active in the sports club.",eg_ch:"他在體育社團非常活躍。",level:"國中8年級"},
+{id:151,en:"Advice",ch:"建議",phr_en:"take my advice",phr_ch:"聽從我的建議",eg_en:"You should take my advice and see a doctor.",eg_ch:"你應該聽從我的建議去看醫生。",level:"國中8年級"},
+{id:152,en:"Balance",ch:"平衡",phr_en:"keep a balance",phr_ch:"保持平衡",eg_en:"It\'s important to keep a balance between study and play.",eg_ch:"在學習與玩樂之間保持平衡是很重要的。",level:"國中8年級"},
+{id:153,en:"Comfortable",ch:"舒服的",phr_en:"feel comfortable",phr_ch:"感覺舒服",eg_en:"I don\'t feel comfortable in these new shoes.",eg_ch:"穿這雙新鞋我覺得不舒服。",level:"國中8年級"},
+{id:154,en:"Dangerous",ch:"危險的",phr_en:"a dangerous road",phr_ch:"一條危險的路",eg_en:"Don\'t drive too fast on this dangerous road.",eg_ch:"在這條危險的路上不要開太快。",level:"國中8年級"},
+{id:155,en:"Exercise",ch:"運動/練習",phr_en:"do exercise",phr_ch:"做運動",eg_en:"I do exercise for thirty minutes every morning.",eg_ch:"我每天早上運動三十分鐘。",level:"國中8年級"},
+{id:156,en:"Friendly",ch:"友好的",phr_en:"be friendly to",phr_ch:"對...友好",eg_en:"Our teachers are very friendly to us.",eg_ch:"我們的老師對我們很友好。",level:"國中8年級"},
+{id:157,en:"General",ch:"一般的",phr_en:"general idea",phr_ch:"大概的主意",eg_en:"I only have a general idea of the plan.",eg_ch:"我只對這個計畫有一個大概的概念。",level:"國中8年級"},
+{id:158,en:"Habit",ch:"習慣",phr_en:"develop a habit",phr_ch:"養成習慣",eg_en:"You should develop a habit of reading every day.",eg_ch:"你應該養成每天閱讀的習慣。",level:"國中8年級"},
+{id:159,en:"Information",ch:"資訊",phr_en:"look for information",phr_ch:"尋找資訊",eg_en:"I am looking for information about the history of Taiwan.",eg_ch:"我正在尋找有關台灣歷史的資訊。",level:"國中8年級"},
+{id:160,en:"Junior",ch:"初級的/年少的",phr_en:"junior high school",phr_ch:"國民中學",eg_en:"We are students in junior high school.",eg_ch:"我們是國中生。",level:"國中8年級"},
+{id:161,en:"Knowledge",ch:"知識",phr_en:"gain knowledge",phr_ch:"獲得知識",eg_en:"Reading books helps us gain more knowledge.",eg_ch:"讀書幫助我們獲得更多知識。",level:"國中8年級"},
+{id:162,en:"Listen",ch:"聽",phr_en:"listen to music",phr_ch:"聽音樂",eg_en:"I like to listen to music while doing homework.",eg_ch:"我喜歡一邊聽音樂一邊寫作業。",level:"國中8年級"},
+{id:163,en:"Museum",ch:"博物館",phr_en:"visit a museum",phr_ch:"參觀博物館",eg_en:"We are going to visit a museum this weekend.",eg_ch:"這週末我們要去參觀博物館。",level:"國中8年級"},
+{id:164,en:"Notice",ch:"注意到",phr_en:"take notice of",phr_ch:"注意到",eg_en:"Did you take notice of the sign on the door?",eg_ch:"你有注意到門上的告示嗎？",level:"國中8年級"},
+{id:165,en:"Opinion",ch:"意見",phr_en:"in my opinion",phr_ch:"在我看來",eg_en:"In my opinion, the blue shirt is better.",eg_ch:"在我看來，藍色襯衫比較好。",level:"國中8年級"},
+{id:166,en:"Parent",ch:"父母之一",phr_en:"strict parents",phr_ch:"嚴格的父母",eg_en:"He has strict parents, so he must go home early.",eg_ch:"他有嚴格的父母，所以他必須早點回家。",level:"國中8年級"},
+{id:167,en:"Success",ch:"成功",phr_en:"wish you success",phr_ch:"祝你成功",eg_en:"I wish you success in your new job.",eg_ch:"祝你新工作成功。",level:"國中8年級"},
+{id:168,en:"Ticket",ch:"票",phr_en:"buy a ticket",phr_ch:"買票",eg_en:"Don\'t forget to buy a ticket before getting on the train.",eg_ch:"上火車前別忘了買票。",level:"國中8年級"},
+{id:169,en:"Useful",ch:"有用的",phr_en:"a useful tool",phr_ch:"有用的工具",eg_en:"The Internet is a useful tool for learning.",eg_ch:"網路是學習的有用工具。",level:"國中8年級"},
+{id:170,en:"Various",ch:"各種各樣的",phr_en:"various colors",phr_ch:"各種顏色",eg_en:"The flowers come in various colors.",eg_ch:"這些花有各種顏色。",level:"國中8年級"},
+{id:171,en:"Waste",ch:"浪費",phr_en:"a waste of money",phr_ch:"浪費錢",eg_en:"Buying that expensive phone is a waste of money.",eg_ch:"買那支昂貴的手機是浪費錢。",level:"國中8年級"},
+{id:172,en:"Bored",ch:"感到無聊的",phr_en:"feel bored",phr_ch:"感到無聊",eg_en:"I feel bored because there is nothing to do.",eg_ch:"我覺得很無聊，因為沒事可做。",level:"國中8年級"},
+{id:173,en:"Careless",ch:"粗心的",phr_en:"a careless mistake",phr_ch:"粗心的錯誤",eg_en:"He lost the game because of a careless mistake.",eg_ch:"他因為一個粗心的錯誤而輸了比賽。",level:"國中8年級"},
+{id:174,en:"Danger",ch:"危險",phr_en:"in danger",phr_ch:"在危險中",eg_en:"The animals are in danger of dying out.",eg_ch:"這些動物處於滅絕的危險中。",level:"國中8年級"},
+{id:175,en:"Excellent",ch:"優秀的",phr_en:"an excellent student",phr_ch:"優異的學生",eg_en:"She is an excellent student in our class.",eg_ch:"她是我們班上的一名優異學生。",level:"國中8年級"},
+{id:176,en:"Garbage",ch:"垃圾",phr_en:"take out the garbage",phr_ch:"倒垃圾",eg_en:"It\'s my brother\'s turn to take out the garbage.",eg_ch:"輪到我哥去倒垃圾了。",level:"國中8年級"},
+{id:177,en:"History",ch:"歷史",phr_en:"Taiwanese history",phr_ch:"台灣歷史",eg_en:"We are learning about Taiwanese history this semester.",eg_ch:"這學期我們正在學習台灣歷史。",level:"國中8年級"},
+{id:178,en:"Island",ch:"島嶼",phr_en:"on an island",phr_ch:"在島上",eg_en:"They lived on a small island for two years.",eg_ch:"他們在一座小島上住了兩年。",level:"國中8年級"},
+{id:179,en:"Joke",ch:"笑話",phr_en:"tell a joke",phr_ch:"講笑話",eg_en:"He told a joke and made everyone laugh.",eg_ch:"他講了一個笑話，讓大家都笑了。",level:"國中8年級"},
+{id:180,en:"Keep",ch:"保持",phr_en:"keep in touch",phr_ch:"保持聯絡",eg_en:"Let\'s keep in touch after the summer vacation.",eg_ch:"暑假過後讓我們保持聯絡。",level:"國中8年級"},
+{id:181,en:"Loud",ch:"大聲的",phr_en:"a loud voice",phr_ch:"大聲的聲音",eg_en:"He spoke in a loud voice so everyone could hear.",eg_ch:"他大聲說話好讓每個人都能聽到。",level:"國中8年級"},
+{id:182,en:"Main",ch:"主要的",phr_en:"the main reason",phr_ch:"主要原因",eg_en:"Money is not the main reason for his happiness.",eg_ch:"錢不是他快樂的主要原因。",level:"國中8年級"},
+{id:183,en:"Nature",ch:"自然",phr_en:"enjoy nature",phr_ch:"享受自然",eg_en:"We went hiking to enjoy nature last Sunday.",eg_ch:"上週日我們去健行以享受大自然。",level:"國中8年級"},
+{id:184,en:"Order",ch:"點餐/命令",phr_en:"place an order",phr_ch:"下訂單/點餐",eg_en:"Are you ready to place an order, sir?",eg_ch:"先生，您準備好點餐了嗎？",level:"國中8年級"},
+{id:185,en:"Perfect",ch:"完美的",phr_en:"a perfect day",phr_ch:"完美的一天",eg_en:"The weather was great; it was a perfect day.",eg_ch:"天氣很好，那是完美的一天。",level:"國中8年級"},
+{id:186,en:"Recipe",ch:"食譜",phr_en:"follow a recipe",phr_ch:"遵循食譜",eg_en:"She is cooking soup by following a recipe.",eg_ch:"她正依照食譜煮湯。",level:"國中8年級"},
+{id:187,en:"Serious",ch:"嚴肅的/嚴重的",phr_en:"a serious problem",phr_ch:"嚴重的問題",eg_en:"Global warming is a serious problem for our Earth.",eg_ch:"全球暖化對地球來說是一個嚴重的問題。",level:"國中8年級"},
+{id:188,en:"Topic",ch:"話題",phr_en:"the topic of",phr_ch:"...的話題",eg_en:"The topic of the meeting was our school trip.",eg_ch:"會議的話題是我們的校外教學。",level:"國中8年級"},
+{id:189,en:"Village",ch:"村莊",phr_en:"in a small village",phr_ch:"在一個小村莊",eg_en:"My grandparents live in a small village in the mountains.",eg_ch:"我祖父母住在山裡的一個小村莊。",level:"國中8年級"},
+{id:190,en:"Environment",ch:"環境",phr_en:"protect the environment",phr_ch:"保護環境",eg_en:"We should recycle more to protect the environment.",eg_ch:"我們應該多回收以保護環境。",level:"國中9年級"},
+{id:191,en:"Pollution",ch:"污染",phr_en:"air pollution",phr_ch:"空氣污染",eg_en:"Air pollution is a serious problem in big cities.",eg_ch:"大城市裡的空氣污染是一個嚴重的問題。",level:"國中9年級"},
+{id:192,en:"Natural",ch:"自然的",phr_en:"natural resources",phr_ch:"自然資源",eg_en:"We must not waste our natural resources.",eg_ch:"我們絕不能浪費自然資源。",level:"國中9年級"},
+{id:193,en:"Relationship",ch:"關係",phr_en:"have a good relationship with",phr_ch:"與...有良好的關係",eg_en:"I have a good relationship with all my classmates.",eg_ch:"我和所有同學都有良好的關係。",level:"國中9年級"},
+{id:194,en:"Encourage",ch:"鼓勵",phr_en:"encourage someone to do something",phr_ch:"鼓勵某人做某事",eg_en:"My teacher encouraged me to join the speech contest.",eg_ch:"老師鼓勵我參加演講比賽。",level:"國中9年級"},
+{id:195,en:"Respect",ch:"尊重",phr_en:"show respect for",phr_ch:"表現出對...的尊重",eg_en:"It is important to show respect for the elderly.",eg_ch:"對長輩表現出尊重是很重要的。",level:"國中9年級"},
+{id:196,en:"Embarrassed",ch:"感到尷尬的",phr_en:"feel embarrassed about",phr_ch:"對...感到尷尬",eg_en:"He felt embarrassed about making such a simple mistake.",eg_ch:"他對犯下這麼簡單的錯誤感到很尷尬。",level:"國中9年級"},
+{id:197,en:"Confident",ch:"有自信的",phr_en:"be confident in",phr_ch:"對...有信心",eg_en:"You should be more confident in your English skills.",eg_ch:"你應該對你的英文能力更有信心。",level:"國中9年級"},
+{id:198,en:"Failure",ch:"失敗",phr_en:"fear of failure",phr_ch:"害怕失敗",eg_en:"Don\'t let the fear of failure stop you from trying.",eg_ch:"不要讓對失敗的恐懼阻止你嘗試。",level:"國中9年級"},
+{id:199,en:"Technology",ch:"科技",phr_en:"modern technology",phr_ch:"現代科技",eg_en:"Modern technology makes our lives much easier.",eg_ch:"現代科技讓我們的生活變得更輕鬆。",level:"國中9年級"},
+{id:200,en:"Social media",ch:"社群媒體",phr_en:"use social media",phr_ch:"使用社群媒體",eg_en:"Many teenagers spend too much time on social media.",eg_ch:"許多青少年花太多時間在社群媒體上。",level:"國中9年級"},
+{id:201,en:"Smartphone",ch:"智慧型手機",phr_en:"stare at a smartphone",phr_ch:"盯著手機看",eg_en:"It\'s bad for your eyes to stare at a smartphone for too long.",eg_ch:"盯著手機看太久對眼睛不好。",level:"國中9年級"},
+{id:202,en:"Tradition",ch:"傳統",phr_en:"follow tradition",phr_ch:"遵循傳統",eg_en:"It is a tradition to eat moon cakes during the festival.",eg_ch:"節慶期間吃月餅是一項傳統。",level:"國中9年級"},
+{id:203,en:"Celebrate",ch:"慶祝",phr_en:"celebrate a birthday",phr_ch:"慶祝生日",eg_en:"We are going to have a party to celebrate his birthday.",eg_ch:"我們要辦一個派對來慶祝他的生日。",level:"國中9年級"},
+{id:204,en:"Health",ch:"健康",phr_en:"mental health",phr_ch:"心理健康",eg_en:"Mental health is as important as physical health.",eg_ch:"心理健康與身體健康一樣重要。",level:"國中9年級"},
+{id:205,en:"Stress",ch:"壓力",phr_en:"under a lot of stress",phr_ch:"承受巨大壓力",eg_en:"Students are often under a lot of stress before exams.",eg_ch:"學生在考前通常承受很大壓力。",level:"國中9年級"},
+{id:206,en:"Decision",ch:"決定",phr_en:"make a decision",phr_ch:"做決定",eg_en:"It\'s hard to make a decision when you have many choices.",eg_ch:"當你有很多選擇時，很難做決定。",level:"國中9年級"},
+{id:207,en:"Solution",ch:"解決辦法",phr_en:"find a solution to",phr_ch:"尋找...的解決辦法",eg_en:"We need to find a solution to the problem quickly.",eg_ch:"我們需要趕快找到這個問題的解決辦法。",level:"國中9年級"},
+{id:208,en:"Result",ch:"結果",phr_en:"as a result",phr_ch:"結果/因此",eg_en:"He didn\'t study; as a result, he failed the test.",eg_ch:"他沒讀書，結果他考試不及格。",level:"國中9年級"},
+{id:209,en:"Suggestion",ch:"建議",phr_en:"make a suggestion",phr_ch:"提出建議",eg_en:"Can I make a suggestion for our school trip?",eg_ch:"我可以為我們的校外教學提個建議嗎？",level:"國中9年級"},
+{id:210,en:"Choice",ch:"選擇",phr_en:"have no choice but to",phr_ch:"除了...別無選擇",eg_en:"I had no choice but to stay home and study.",eg_ch:"我除了留在家讀書外別無選擇。",level:"國中9年級"},
+{id:211,en:"Opportunity",ch:"機會",phr_en:"grab the opportunity",phr_ch:"抓住機會",eg_en:"You should grab the opportunity to study abroad.",eg_ch:"你應該抓住出國留學的機會。",level:"國中9年級"},
+{id:212,en:"Goal",ch:"目標",phr_en:"set a goal",phr_ch:"設定目標",eg_en:"It is important to set a goal for your future.",eg_ch:"為你的未來設定目標是很重要的。",level:"國中9年級"},
+{id:213,en:"Skill",ch:"技能",phr_en:"improve skills",phr_ch:"提升技能",eg_en:"He practices every day to improve his basketball skills.",eg_ch:"他每天練習以提升他的籃球技能。",level:"國中9年級"},
+{id:214,en:"Challenge",ch:"挑戰",phr_en:"take on a challenge",phr_ch:"接受挑戰",eg_en:"She decided to take on the challenge of learning Japanese.",eg_ch:"她決定接受學習日文的挑戰。",level:"國中9年級"},
+{id:215,en:"Dictionary",ch:"字典",phr_en:"look up a word in a dictionary",phr_ch:"在字典中查單字",eg_en:"You can look up the word in a dictionary if you don\'t know it.",eg_ch:"如果你不認識這個單字，可以在字典中查一下。",level:"國中9年級"},
+{id:216,en:"Communication",ch:"溝通",phr_en:"lack of communication",phr_ch:"缺乏溝通",eg_en:"The problem was caused by a lack of communication.",eg_ch:"這個問題是由於缺乏溝通造成的。",level:"國中9年級"},
+{id:217,en:"Rare",ch:"罕見的",phr_en:"rare animal",phr_ch:"稀有動物",eg_en:"The panda is one of the rare animals in the world.",eg_ch:"熊貓是世界上稀有的動物之一。",level:"國中9年級"},
+{id:218,en:"Simple",ch:"簡單的",phr_en:"in simple words",phr_ch:"用簡單的話說",eg_en:"Can you explain it to me in simple words?",eg_ch:"你能用簡單的話解釋給我聽嗎？",level:"國中9年級"},
+{id:219,en:"Impossible",ch:"不可能的",phr_en:"nothing is impossible",phr_ch:"沒什麼是不可能的",eg_en:"Nothing is impossible if you have a strong will.",eg_ch:"如果你意志堅強，沒什麼是不可能的。",level:"國中9年級"},
+{id:220,en:"Modern",ch:"現代的",phr_en:"modern life",phr_ch:"現代生活",eg_en:"Modern life is fast-paced and busy.",eg_ch:"現代生活節奏很快且忙碌。",level:"國中9年級"},
+{id:221,en:"Ancient",ch:"古代的",phr_en:"ancient building",phr_ch:"古老建築",eg_en:"They visited many ancient buildings in Tainan.",eg_ch:"他們參訪了台南許多古老的建築。",level:"國中9年級"},
+{id:222,en:"Graduate",ch:"畢業",phr_en:"graduate from",phr_ch:"從...畢業",eg_en:"He will graduate from junior high school next June.",eg_ch:"他明年六月將從國中畢業。",level:"國中9年級"},
+{id:223,en:"Education",ch:"教育",phr_en:"receive an education",phr_ch:"接受教育",eg_en:"Every child has the right to receive an education.",eg_ch:"每個孩子都有權利接受教育。",level:"國中9年級"},
+{id:224,en:"Career",ch:"職業生涯",phr_en:"career path",phr_ch:"職業道路",eg_en:"She is thinking about her future career path.",eg_ch:"她正在思考未來的職業道路。",level:"國中9年級"},
+{id:225,en:"Salary",ch:"薪水",phr_en:"a high/low salary",phr_ch:"高/低薪水",eg_en:"He works hard to earn a high salary.",eg_ch:"他努力工作以賺取高薪。",level:"國中9年級"},
+{id:226,en:"Business",ch:"生意/事務",phr_en:"none of your business",phr_ch:"不干你的事",eg_en:"What I do in my free time is none of your business.",eg_ch:"我空閒時間做什麼不干你的事。",level:"國中9年級"},
+{id:227,en:"Office",ch:"辦公室",phr_en:"work in an office",phr_ch:"在辦公室工作",eg_en:"My uncle works in a large office in Taipei.",eg_ch:"我叔叔在台北的一間大辦公室工作。",level:"國中9年級"},
+{id:228,en:"Subject",ch:"科目/主題",phr_en:"favorite subject",phr_ch:"最喜歡的科目",eg_en:"My favorite subject in school is English.",eg_ch:"我在學校最喜歡的科目是英文。",level:"國中9年級"},
+{id:229,en:"Exam",ch:"考試",phr_en:"take/pass an exam",phr_ch:"參加/通過考試",eg_en:"You need to study hard to pass the final exam.",eg_ch:"你需要努力讀書才能通過期末考。",level:"國中9年級"},
+{id:230,en:"Grade",ch:"年級/成績",phr_en:"get a good grade",phr_ch:"得到好成績",eg_en:"I am happy that I got a good grade on the math test.",eg_ch:"我很開心數學測驗得到了好成績。",level:"國中9年級"},
+{id:231,en:"Memory",ch:"記憶/回憶",phr_en:"have a good memory",phr_ch:"記憶力好",eg_en:"He has a good memory for names and faces.",eg_ch:"他對姓名和長相的記憶力很好。",level:"國中9年級"},
+{id:232,en:"Support",ch:"支持",phr_en:"support a family",phr_ch:"養家",eg_en:"It\'s hard for him to support a large family alone.",eg_ch:"對他來說，獨自養活一個大家庭很辛苦。",level:"國中9年級"},
+{id:233,en:"Friendship",ch:"友誼",phr_en:"true friendship",phr_ch:"真正的友誼",eg_en:"True friendship lasts forever.",eg_ch:"真正的友誼天長地久。",level:"國中9年級"},
+{id:234,en:"Lonely",ch:"寂寞的",phr_en:"feel lonely",phr_ch:"感到寂寞",eg_en:"She felt lonely after her best friend moved away.",eg_ch:"在最好的朋友搬走後，她感到很寂寞。",level:"國中9年級"},
+{id:235,en:"Brave",ch:"勇敢的",phr_en:"be brave enough to",phr_ch:"足夠勇敢去做...",eg_en:"You must be brave enough to admit your mistakes.",eg_ch:"你必須足夠勇敢去承認錯誤。",level:"國中9年級"},
+{id:236,en:"Energy",ch:"能量/精力",phr_en:"save energy",phr_ch:"節約能源",eg_en:"Turning off the lights can help save energy.",eg_ch:"隨手關燈可以幫助節約能源。",level:"國中9年級"},
+{id:237,en:"Climate",ch:"氣候",phr_en:"climate change",phr_ch:"氣候變遷",eg_en:"Climate change is a global issue.",eg_ch:"氣候變遷是一個全球性的議題。",level:"國中9年級"},
+{id:238,en:"Species",ch:"物種",phr_en:"endangered species",phr_ch:"瀕危物種",eg_en:"The green sea turtle is an endangered species.",eg_ch:"綠蠵龜是一種瀕危物種。",level:"國中9年級"},
+{id:239,en:"Recycle",ch:"回收",phr_en:"recycle paper and glass",phr_ch:"回收紙張與玻璃",eg_en:"We should recycle paper and glass to help the Earth.",eg_ch:"我們應該回收紙張和玻璃以幫助地球。",level:"國中9年級"},
+{id:240,en:"Reduce",ch:"減少",phr_en:"reduce waste",phr_ch:"減少浪費",eg_en:"Using reusable bags can reduce waste.",eg_ch:"使用環保袋可以減少浪費。",level:"國中9年級"},
+{id:241,en:"Plastic",ch:"塑膠",phr_en:"plastic bag",phr_ch:"塑膠袋",eg_en:"Try not to use too many plastic bags.",eg_ch:"盡量不要使用太多的塑膠袋。",level:"國中9年級"},
+{id:242,en:"Search",ch:"搜尋",phr_en:"search engine",phr_ch:"搜尋引擎",eg_en:"Google is the most famous search engine.",eg_ch:"Google 是最著名的搜尋引擎。",level:"國中9年級"},
+{id:243,en:"Online",ch:"線上的",phr_en:"online shopping",phr_ch:"線上購物",eg_en:"Online shopping is very convenient but dangerous.",eg_ch:"線上購物很方便但也具危險性。",level:"國中9年級"},
+{id:244,en:"Account",ch:"帳號",phr_en:"create an account",phr_ch:"建立帳號",eg_en:"You need to create an account to use this app.",eg_ch:"你需要建立一個帳號才能使用這個應用程式。",level:"國中9年級"},
+{id:245,en:"Upload",ch:"上傳",phr_en:"upload a video",phr_ch:"上傳影片",eg_en:"He uploaded a video of his cat to YouTube.",eg_ch:"他上傳了一段他貓咪的影片到 YouTube。",level:"國中9年級"},
+{id:246,en:"Download",ch:"下載",phr_en:"download music",phr_ch:"下載音樂",eg_en:"It\'s illegal to download music without paying.",eg_ch:"不付費下載音樂是違法的。",level:"國中9年級"},
+{id:247,en:"Diet",ch:"飲食",phr_en:"a balanced diet",phr_ch:"均衡飲食",eg_en:"A balanced diet is the key to staying healthy.",eg_ch:"均衡飲食是保持健康的關鍵。",level:"國中9年級"},
+{id:248,en:"Weight",ch:"重量/體重",phr_en:"lose weight",phr_ch:"減重",eg_en:"She is exercising every day to lose weight.",eg_ch:"她每天運動是為了減重。",level:"國中9年級"},
+{id:249,en:"Disease",ch:"疾病",phr_en:"prevent disease",phr_ch:"預防疾病",eg_en:"Washing hands frequently can help prevent disease.",eg_ch:"勤洗手有助於預防疾病。",level:"國中9年級"},
+{id:250,en:"Holiday",ch:"假日",phr_en:"on holiday",phr_ch:"在度假中",eg_en:"They are on holiday in Japan right now.",eg_ch:"他們現在正在日本度假。",level:"國中9年級"},
+{id:251,en:"Native",ch:"本土的/母語的",phr_en:"native speaker",phr_ch:"母語人士",eg_en:"Talking to a native speaker can improve your English.",eg_ch:"和母語人士對話可以提升你的英文。",level:"國中9年級"},
+{id:252,en:"Foreign",ch:"外國的",phr_en:"foreign country",phr_ch:"外國",eg_en:"I love visiting foreign countries to see different cultures.",eg_ch:"我喜歡到外國旅遊以看不同的文化。",level:"國中9年級"},
+{id:253,en:"Problem",ch:"問題",phr_en:"solve a problem",phr_ch:"解決問題",eg_en:"Don\'t worry; we will find a way to solve the problem.",eg_ch:"別擔心；我們會找到解決問題的方法。",level:"國中9年級"},
+{id:254,en:"Fact",ch:"事實",phr_en:"in fact",phr_ch:"事實上",eg_en:"He looks young, but in fact, he is 50.",eg_ch:"他看起來很年輕，但事實上他 50 歲了。",level:"國中9年級"},
+{id:255,en:"Situation",ch:"情況/處境",phr_en:"a difficult situation",phr_ch:"困難的處境",eg_en:"I found myself in a difficult situation.",eg_ch:"我發現自己處於一個困難的處境。",level:"國中9年級"},
+{id:256,en:"Famous",ch:"著名的",phr_en:"be famous for",phr_ch:"以...聞名",eg_en:"Taiwan is famous for its delicious pearl milk tea.",eg_ch:"台灣以其美味的珍珠奶茶聞名。",level:"國中9年級"},
+{id:257,en:"Protect",ch:"保護",phr_en:"protect from",phr_ch:"保護免於...",eg_en:"This jacket will protect you from the cold.",eg_ch:"這件外套會保護你免受寒冷。",level:"國中9年級"},
+{id:258,en:"Stressful",ch:"壓力大的",phr_en:"a stressful job",phr_ch:"壓力大的工作",eg_en:"Teaching can be a very stressful job sometimes.",eg_ch:"教書有時候是一份壓力很大的工作。",level:"國中9年級"},
+{id:259,en:"Successful",ch:"成功的",phr_en:"a successful businessman",phr_ch:"成功的商人",eg_en:"My father is a successful businessman.",eg_ch:"我父親是一位成功的商人。",level:"國中9年級"},
+{id:260,en:"Necessary",ch:"必要的",phr_en:"be necessary for",phr_ch:"對...是必要的",eg_en:"Sleep is necessary for a healthy body.",eg_ch:"睡眠對健康的身體是必要的。",level:"國中9年級"},
+{id:261,en:"Possible",ch:"可能的",phr_en:"as soon as possible",phr_ch:"儘快",eg_en:"Please reply to my email as soon as possible.",eg_ch:"請儘快回覆我的郵件。",level:"國中9年級"},
+{id:262,en:"Boring",ch:"無聊的",phr_en:"a boring lecture",phr_ch:"無聊的講座",eg_en:"The students fell asleep during the boring lecture.",eg_ch:"學生們在無聊的講座中睡著了。",level:"國中9年級"},
+{id:263,en:"Absence",ch:"缺席/缺乏",phr_en:"in the absence of",phr_ch:"在缺乏...的情況下",eg_en:"In the absence of rain, the plants died.",eg_ch:"在缺乏雨水的情況下，植物都枯死了。",level:"高中"},
+{id:264,en:"Academic",ch:"學術的",phr_en:"academic performance",phr_ch:"學業表現",eg_en:"She was praised for her excellent academic performance.",eg_ch:"她因優異的學業表現而受到表揚。",level:"高中"},
+{id:265,en:"Acceptable",ch:"可接受的",phr_en:"socially acceptable",phr_ch:"社會可接受的",eg_en:"Their behavior was not socially acceptable.",eg_ch:"他們的行為在社會上是不可接受的。",level:"高中"},
+{id:266,en:"Accomplish",ch:"完成/達成",phr_en:"accomplish a goal",phr_ch:"達成目標",eg_en:"You can accomplish anything with hard work.",eg_ch:"只要努力，你可以達成任何目標。",level:"高中"},
+{id:267,en:"Accurate",ch:"準確的",phr_en:"accurate description",phr_ch:"準確的描述",eg_en:"The witness gave an accurate description of the suspect.",eg_ch:"目擊者對嫌疑犯提供了準確的描述。",level:"高中"},
+{id:268,en:"Adjust",ch:"調整/適應",phr_en:"adjust to life",phr_ch:"適應生活",eg_en:"It took her a while to adjust to life in a new city.",eg_ch:"她花了一段時間才適應新城市的生活。",level:"高中"},
+{id:269,en:"Admire",ch:"欽佩",phr_en:"admire someone for...",phr_ch:"因...而欽佩某人",eg_en:"I admire him for his courage and honesty.",eg_ch:"我欽佩他的勇氣與誠實。",level:"高中"},
+{id:270,en:"Adopt",ch:"採納/領養",phr_en:"adopt a suggestion",phr_ch:"採納建議",eg_en:"The company decided to adopt my suggestion.",eg_ch:"公司決定採納我的建議。",level:"高中"},
+{id:271,en:"Advantage",ch:"優勢",phr_en:"take advantage of",phr_ch:"利用",eg_en:"You should take advantage of this opportunity.",eg_ch:"你應該利用這次機會。",level:"高中"},
+{id:272,en:"Adventure",ch:"冒險",phr_en:"a sense of adventure",phr_ch:"冒險精神",eg_en:"The trip satisfied his sense of adventure.",eg_ch:"這次旅行滿足了他的冒險精神。",level:"高中"},
+{id:273,en:"Advertise",ch:"打廣告",phr_en:"advertise a product",phr_ch:"為產品打廣告",eg_en:"They spent a lot of money to advertise the new phone.",eg_ch:"他們花了很多錢為這款新手機打廣告。",level:"高中"},
+{id:274,en:"Afford",ch:"負擔得起",phr_en:"can afford to",phr_ch:"負擔得起...",eg_en:"We can\'t afford to buy a new car this year.",eg_ch:"我們今年負擔不起買新車。",level:"高中"},
+{id:275,en:"Aggressive",ch:"有侵略性的",phr_en:"aggressive behavior",phr_ch:"侵略性的行為",eg_en:"The dog showed aggressive behavior toward strangers.",eg_ch:"那隻狗對陌生人表現出侵略行為。",level:"高中"},
+{id:276,en:"Agriculture",ch:"農業",phr_en:"modern agriculture",phr_ch:"現代農業",eg_en:"Modern agriculture uses advanced technology.",eg_ch:"現代農業使用先進技術。",level:"高中"},
+{id:277,en:"Ambition",ch:"野心/抱負",phr_en:"full of ambition",phr_ch:"充滿抱負",eg_en:"He is full of ambition to become a great doctor.",eg_ch:"他充滿抱負，想成為一名偉大的醫生。",level:"高中"},
+{id:278,en:"Analyze",ch:"分析",phr_en:"analyze data",phr_ch:"分析數據",eg_en:"Scientists need to analyze the data carefully.",eg_ch:"科學家需要仔細分析數據。",level:"高中"},
+{id:279,en:"Anniversary",ch:"週年紀念日",phr_en:"wedding anniversary",phr_ch:"結婚週年",eg_en:"They celebrated their 10th wedding anniversary yesterday.",eg_ch:"他們昨天慶祝了結婚十週年紀念日。",level:"高中"},
+{id:280,en:"Appreciation",ch:"欣賞/感謝",phr_en:"show appreciation for",phr_ch:"對...表示感謝",eg_en:"We want to show our appreciation for your help.",eg_ch:"我們想對您的幫助表示感謝。",level:"高中"},
+{id:281,en:"Appropriate",ch:"適當的",phr_en:"appropriate for",phr_ch:"適合...",eg_en:"This movie is not appropriate for young children.",eg_ch:"這部電影不適合幼童觀看。",level:"高中"},
+{id:282,en:"Architecture",ch:"建築",phr_en:"modern architecture",phr_ch:"現代建築",eg_en:"I am fascinated by modern architecture in this city.",eg_ch:"我被這座城市的現代建築所吸引。",level:"高中"},
+{id:283,en:"Artificial",ch:"人工的",phr_en:"artificial intelligence",phr_ch:"人工智慧",eg_en:"Artificial intelligence is changing the world.",eg_ch:"人工智慧正在改變世界。",level:"高中"},
+{id:284,en:"Assistant",ch:"助手",phr_en:"shop assistant",phr_ch:"店員/售貨員",eg_en:"The shop assistant helped me find the right size.",eg_ch:"店員幫我找到了合適的尺寸。",level:"高中"},
+{id:285,en:"Associate",ch:"聯想",phr_en:"associate A with B",phr_ch:"將 A 與 B 聯想在一起",eg_en:"People often associate red with danger.",eg_ch:"人們常把紅色與危險聯想在一起。",level:"高中"},
+{id:286,en:"Atmosphere",ch:"大氣/氣氛",phr_en:"friendly atmosphere",phr_ch:"友好的氣氛",eg_en:"The restaurant has a very friendly atmosphere.",eg_ch:"這家餐廳的氣氛非常友好。",level:"高中"},
+{id:287,en:"Attempt",ch:"嘗試",phr_en:"make an attempt to",phr_ch:"試圖做某事",eg_en:"He made an attempt to break the world record.",eg_ch:"他試圖打破世界紀錄。",level:"高中"},
+{id:288,en:"Attitude",ch:"態度",phr_en:"positive attitude",phr_ch:"積極的態度",eg_en:"Maintaining a positive attitude is important.",eg_ch:"保持積極的態度很重要。",level:"高中"},
+{id:289,en:"Attractive",ch:"有吸引力的",phr_en:"attractive price",phr_ch:"吸引人的價格",eg_en:"The product is sold at a very attractive price.",eg_ch:"這款產品以非常吸引人的價格出售。",level:"高中"},
+{id:290,en:"Authority",ch:"權威/當局",phr_en:"local authorities",phr_ch:"地方當局",eg_en:"The local authorities are investigating the case.",eg_ch:"地方當局正在調查這起案件。",level:"高中"},
+{id:291,en:"Available",ch:"可得的/有空的",phr_en:"be available to",phr_ch:"可被...使用",eg_en:"This service is available to all members.",eg_ch:"這項服務對所有會員開放。",level:"高中"},
+{id:292,en:"Awkward",ch:"尷尬的",phr_en:"an awkward silence",phr_ch:"尷尬的沉默",eg_en:"There was an awkward silence after his comment.",eg_ch:"在他評論之後，現場陷入了一陣尷尬的沉默。",level:"高中"},
+{id:293,en:"Baggage",ch:"行李",phr_en:"excess baggage",phr_ch:"超重行李",eg_en:"You have to pay extra for excess baggage.",eg_ch:"你必須為超重行李支付額外費用。",level:"高中"},
+{id:294,en:"Bargain",ch:"划算貨/討價還價",phr_en:"a real bargain",phr_ch:"真划算",eg_en:"This jacket was a real bargain at only $20.",eg_ch:"這件夾克只要 20 美元，真是太划算了。",level:"高中"},
+{id:295,en:"Barrier",ch:"障礙",phr_en:"language barrier",phr_ch:"語言障礙",eg_en:"The language barrier made communication difficult.",eg_ch:"語言障礙讓溝通變得很困難。",level:"高中"},
+{id:296,en:"Benefit",ch:"益處",phr_en:"benefit from",phr_ch:"從...獲益",eg_en:"We can benefit from regular exercise.",eg_ch:"我們可以從規律運動中獲益。",level:"高中"},
+{id:297,en:"Blame",ch:"責怪",phr_en:"blame someone for",phr_ch:"因某事責怪某人",eg_en:"Don\'t blame me for your own mistakes.",eg_ch:"不要因為你自己的錯誤而責怪我。",level:"高中"},
+{id:298,en:"Brilliant",ch:"傑出的",phr_en:"a brilliant idea",phr_ch:"傑出的點子",eg_en:"She came up with a brilliant idea for the project.",eg_ch:"她為這個專案想出了一個絕妙的主意。",level:"高中"},
+{id:299,en:"Budget",ch:"預算",phr_en:"within budget",phr_ch:"在預算內",eg_en:"We managed to finish the project within budget.",eg_ch:"我們成功在預算內完成了專案。",level:"高中"},
+{id:300,en:"Calculate",ch:"計算",phr_en:"calculate the cost",phr_ch:"計算成本",eg_en:"We need to calculate the cost before starting.",eg_ch:"我們在開始前需要先計算成本。",level:"高中"},
+{id:301,en:"Campaign",ch:"活動",phr_en:"advertising campaign",phr_ch:"廣告活動",eg_en:"The company launched a new advertising campaign.",eg_ch:"公司發起了一項新的廣告活動。",level:"高中"},
+{id:302,en:"Candidate",ch:"候選人",phr_en:"ideal candidate",phr_ch:"理想的候選人",eg_en:"She is an ideal candidate for the job.",eg_ch:"她是這份工作的理想人選。",level:"高中"},
+{id:303,en:"Capacity",ch:"容量/能力",phr_en:"seating capacity",phr_ch:"座位數",eg_en:"The stadium has a seating capacity of 50,000.",eg_ch:"這座體育場有五萬個座位。",level:"高中"},
+{id:304,en:"Characteristic",ch:"特徵",phr_en:"a unique characteristic",phr_ch:"獨特的特徵",eg_en:"Kindness is her most unique characteristic.",eg_ch:"善良是她最獨特的特徵。",level:"高中"},
+{id:305,en:"Circumstance",ch:"情況",phr_en:"under the circumstances",phr_ch:"在這種情況下",eg_en:"Under the circumstances, we cannot accept the offer.",eg_ch:"在這種情況下，我們無法接受這項提議。",level:"高中"},
+{id:306,en:"Claim",ch:"聲稱/主張",phr_en:"claim to be",phr_ch:"聲稱是...",eg_en:"He claims to be an expert in this field.",eg_ch:"他聲稱自己是這個領域的專家。",level:"高中"},
+{id:307,en:"Collapse",ch:"倒塌/崩潰",phr_en:"collapse in the wind",phr_ch:"在風中倒塌",eg_en:"The old building collapsed in the wind.",eg_ch:"那座老舊建築在強風中倒塌了。",level:"高中"},
+{id:308,en:"Combination",ch:"結合",phr_en:"a combination of",phr_ch:"結合了...",eg_en:"The dish is a combination of sweet and spicy.",eg_ch:"這道菜結合了甜味與辣味。",level:"高中"},
+{id:309,en:"Commitment",ch:"承諾/投入",phr_en:"make a commitment",phr_ch:"做出承諾",eg_en:"Joining the team requires a big commitment.",eg_ch:"加入這支球隊需要很大的投入。",level:"高中"},
+{id:310,en:"Comparison",ch:"比較",phr_en:"in comparison with",phr_ch:"與...相比較",eg_en:"In comparison with last year, sales are up.",eg_ch:"與去年相比，銷售額有所上升。",level:"高中"},
+{id:311,en:"Competition",ch:"競爭",phr_en:"fierce competition",phr_ch:"激烈的競爭",eg_en:"There is fierce competition for the scholarship.",eg_ch:"這份獎學金的競爭非常激烈。",level:"高中"},
+{id:312,en:"Complain",ch:"投訴",phr_en:"complain about",phr_ch:"抱怨...",eg_en:"Customers often complain about the slow service.",eg_ch:"顧客常抱怨服務太慢。",level:"高中"},
+{id:313,en:"Concentrate",ch:"專注",phr_en:"concentrate on",phr_ch:"專注於...",eg_en:"I need to concentrate on my homework.",eg_ch:"我需要專注於我的功課。",level:"高中"},
+{id:314,en:"Conclude",ch:"總結/下結論",phr_en:"conclude that",phr_ch:"得出結論說...",eg_en:"The study concluded that sleep is essential.",eg_ch:"研究得出結論，睡眠是不可或缺的。",level:"高中"},
+{id:315,en:"Confidence",ch:"信心",phr_en:"lack confidence",phr_ch:"缺乏信心",eg_en:"Many students lack confidence in speaking English.",eg_ch:"許多學生對說英文缺乏信心。",level:"高中"},
+{id:316,en:"Confirm",ch:"確認",phr_en:"confirm a reservation",phr_ch:"確認預約",eg_en:"Please call to confirm your reservation.",eg_ch:"請打電話確認您的預約。",level:"高中"},
+{id:317,en:"Conflict",ch:"衝突",phr_en:"come into conflict",phr_ch:"發生衝突",eg_en:"The two countries came into conflict over land.",eg_ch:"這兩國因領土問題而發生衝突。",level:"高中"},
+{id:318,en:"Consequence",ch:"後果",phr_en:"face the consequences",phr_ch:"承擔後果",eg_en:"You must face the consequences of your actions.",eg_ch:"你必須承擔你行為的後果。",level:"高中"},
+{id:319,en:"Considerable",ch:"相當大的/值得考慮的",phr_en:"considerable amount of",phr_ch:"相當多量的...",eg_en:"A considerable amount of money was spent on it.",eg_ch:"花費了相當大的一筆錢在上面。",level:"高中"},
+{id:320,en:"Constant",ch:"不斷的",phr_en:"constant noise",phr_ch:"不斷的噪音",eg_en:"I couldn\'t sleep because of the constant noise.",eg_ch:"因為不斷的噪音，我睡不著覺。",level:"高中"},
+{id:321,en:"Construct",ch:"建造",phr_en:"construct a building",phr_ch:"建造大樓",eg_en:"Workers are constructing a new bridge.",eg_ch:"工人們正在建造一座新橋。",level:"高中"},
+{id:322,en:"Consumer",ch:"消費者",phr_en:"consumer behavior",phr_ch:"消費者行為",eg_en:"Companies study consumer behavior to sell more.",eg_ch:"公司研究消費者行為以提高銷量。",level:"高中"},
+{id:323,en:"Contribution",ch:"貢獻",phr_en:"make a contribution to",phr_ch:"對...做出貢獻",eg_en:"She made a significant contribution to the project.",eg_ch:"她對該專案做出了顯著貢獻。",level:"高中"},
+{id:324,en:"Convenience",ch:"方便",phr_en:"for your convenience",phr_ch:"為了您的方便",eg_en:"The shop is open 24 hours for your convenience.",eg_ch:"為了您的方便，商店 24 小時營業。",level:"高中"},
+{id:325,en:"Convince",ch:"說服",phr_en:"convince someone to",phr_ch:"說服某人去做...",eg_en:"I tried to convince him to join us.",eg_ch:"我試圖說服他加入我們。",level:"高中"},
+{id:326,en:"Creativity",ch:"創造力",phr_en:"spark creativity",phr_ch:"激發創造力",eg_en:"Art classes can spark creativity in children.",eg_ch:"藝術課可以激發孩童的創造力。",level:"高中"},
+{id:327,en:"Critical",ch:"批評的/關鍵的",phr_en:"be critical of",phr_ch:"對...感到不滿/批評",eg_en:"The boss was very critical of his work.",eg_ch:"老闆對他的工作評價非常嚴苛。",level:"高中"},
+{id:328,en:"Curious",ch:"好奇的",phr_en:"be curious about",phr_ch:"對...感到好奇",eg_en:"Children are naturally curious about the world.",eg_ch:"孩童天生對世界感到好奇。",level:"高中"},
+{id:329,en:"Declare",ch:"宣告",phr_en:"declare war",phr_ch:"宣戰",eg_en:"The government declared war on poverty.",eg_ch:"政府向貧困宣戰。",level:"高中"},
+{id:330,en:"Decrease",ch:"減少",phr_en:"a sharp decrease",phr_ch:"劇烈減少",eg_en:"There has been a sharp decrease in sales.",eg_ch:"銷售額劇烈下降。",level:"高中"},
+{id:331,en:"Definite",ch:"肯定的/確定的",phr_en:"for definite",phr_ch:"確定地",eg_en:"I don\'t know for definite when she will arrive.",eg_ch:"我不能確定她何時會到達。",level:"高中"},
+{id:332,en:"Deliver",ch:"遞送",phr_en:"deliver a speech",phr_ch:"發表演說",eg_en:"He was invited to deliver a speech at the school.",eg_ch:"他被邀請在學校發表一場演說。",level:"高中"},
+{id:333,en:"Demonstrate",ch:"示範/證明",phr_en:"demonstrate how to",phr_ch:"示範如何...",eg_en:"The teacher demonstrated how to solve the problem.",eg_ch:"老師示範了如何解決這道題目。",level:"高中"},
+{id:334,en:"Depend",ch:"依賴",phr_en:"depend on",phr_ch:"依賴...",eg_en:"Success depends on your hard work.",eg_ch:"成功取決於你的努力。",level:"高中"},
+{id:335,en:"Description",ch:"描述",phr_en:"beyond description",phr_ch:"難以形容",eg_en:"The beauty of the sunset was beyond description.",eg_ch:"日落的美景難以用言語形容。",level:"高中"},
+{id:336,en:"Deserve",ch:"值得",phr_en:"deserve to win",phr_ch:"值得獲勝",eg_en:"They played so well that they deserved to win.",eg_ch:"他們表現得太棒了，值得獲勝。",level:"高中"},
+{id:337,en:"Determine",ch:"決定/決心",phr_en:"be determined to",phr_ch:"下定決心去做...",eg_en:"She was determined to pass the exam.",eg_ch:"她下定決心要通過考試。",level:"高中"},
+{id:338,en:"Disaster",ch:"災難",phr_en:"natural disaster",phr_ch:"自然災害",eg_en:"The flood was a terrible natural disaster.",eg_ch:"這場洪水是一場可怕的自然災害。",level:"高中"},
+{id:339,en:"Discipline",ch:"紀律",phr_en:"strict discipline",phr_ch:"嚴格的紀律",eg_en:"The school is known for its strict discipline.",eg_ch:"這間學校以紀律嚴明聞名。",level:"高中"},
+{id:340,en:"Distinguish",ch:"區分",phr_en:"distinguish A from B",phr_ch:"區分 A 與 B",eg_en:"It\'s hard to distinguish the twins from each other.",eg_ch:"很難區分這對雙胞胎。",level:"高中"},
+{id:341,en:"Distribute",ch:"分發",phr_en:"distribute leaflets",phr_ch:"分發傳單",eg_en:"They distributed leaflets in the street.",eg_ch:"他們在街上分發傳單。",level:"高中"},
+{id:342,en:"Dynamic",ch:"動態的/充滿活力的",phr_en:"a dynamic leader",phr_ch:"充滿活力的領導者",eg_en:"He is a dynamic leader with many new ideas.",eg_ch:"他是一位充滿活力、有很多新點子的領導者。",level:"高中"},
+{id:343,en:"Economics",ch:"經濟學",phr_en:"study economics",phr_ch:"學習經濟學",eg_en:"He decided to study economics in university.",eg_ch:"他決定在大學學習經濟學。",level:"高中"},
+{id:344,en:"Efficiency",ch:"效率",phr_en:"fuel efficiency",phr_ch:"燃油效率",eg_en:"The new engine has better fuel efficiency.",eg_ch:"這款新引擎的燃油效率更好。",level:"高中"},
+{id:345,en:"Electronic",ch:"電子的",phr_en:"electronic device",phr_ch:"電子裝置",eg_en:"Please turn off your electronic devices.",eg_ch:"請關閉您的電子裝置。",level:"高中"},
+{id:346,en:"Emphasis",ch:"強調",phr_en:"put emphasis on",phr_ch:"強調...",eg_en:"The teacher puts emphasis on correct grammar.",eg_ch:"老師強調正確文法。",level:"高中"},
+{id:347,en:"Encounter",ch:"遭遇/遇到",phr_en:"encounter problems",phr_ch:"遇到問題",eg_en:"We might encounter some problems on the trip.",eg_ch:"我們旅途中可能會遇到一些問題。",level:"高中"},
+{id:348,en:"Entertain",ch:"娛樂",phr_en:"entertain guests",phr_ch:"招待客人",eg_en:"She enjoys entertaining guests at home.",eg_ch:"她喜歡在家中招待客人。",level:"高中"},
+{id:349,en:"Essential",ch:"必要的",phr_en:"be essential to",phr_ch:"對...來說是必要的",eg_en:"Water is essential to life.",eg_ch:"水對生命來說是必要的。",level:"高中"},
+{id:350,en:"Exaggerate",ch:"誇張",phr_en:"exaggerate the facts",phr_ch:"誇大事實",eg_en:"Don\'t exaggerate the facts to make it interesting.",eg_ch:"不要為了讓事情變得有趣而誇大事實。",level:"高中"},
+{id:351,en:"Expansion",ch:"擴張",phr_en:"economic expansion",phr_ch:"經濟擴張",eg_en:"The country is undergoing economic expansion.",eg_ch:"該國正在經歷經濟擴張。",level:"高中"},
+{id:352,en:"Experimental",ch:"實驗性的",phr_en:"experimental stage",phr_ch:"實驗階段",eg_en:"The drug is still in the experimental stage.",eg_ch:"這款藥物仍處於實驗階段。",level:"高中"},
+{id:353,en:"Explanation",ch:"解釋",phr_en:"give an explanation",phr_ch:"給予解釋",eg_en:"The teacher gave an explanation for the rule.",eg_ch:"老師對這項規則做了解釋。",level:"高中"},
+{id:354,en:"Flexible",ch:"靈活的/有彈性的",phr_en:"flexible hours",phr_ch:"彈性工時",eg_en:"The job offers flexible hours for parents.",eg_ch:"這份工作為父母提供彈性的工時。",level:"高中"},
+{id:355,en:"Frequent",ch:"頻繁的",phr_en:"make frequent visits",phr_ch:"頻繁造訪",eg_en:"He makes frequent visits to the library.",eg_ch:"他頻繁地造訪圖書館。",level:"高中"},
+{id:356,en:"Guarantee",ch:"保證",phr_en:"guarantee quality",phr_ch:"保證品質",eg_en:"We guarantee the quality of our products.",eg_ch:"我們保證產品的品質。",level:"高中"},
+{id:357,en:"Identify",ch:"辨識",phr_en:"identify the problem",phr_ch:"識別問題",eg_en:"It is important to identify the problem first.",eg_ch:"首先識別問題是很重要的。",level:"高中"},
+{id:358,en:"Immediate",ch:"立即的",phr_en:"immediate response",phr_ch:"立即的回應",eg_en:"The email requires an immediate response.",eg_ch:"這封郵件需要立即回覆。",level:"高中"},
+{id:359,en:"Incredible",ch:"難以置信的",phr_en:"an incredible story",phr_ch:"難以置信的故事",eg_en:"She told me an incredible story about her trip.",eg_ch:"她跟我說了一個關於她旅行的難以置信的故事。",level:"高中"},
+{id:360,en:"achieve",ch:"達成",phr_en:"achieve a goal",phr_ch:"達成目標",eg_en:"He worked hard to achieve his goal.",eg_ch:"他努力工作以達成目標。",level:"英文"},
+{id:361,en:"influence",ch:"影響",phr_en:"have an influence on",phr_ch:"對...有影響",eg_en:"Social media has a big influence on teenagers.",eg_ch:"社群媒體對青少年有很大的影響。",level:"英文"},
+{id:362,en:"pressure",ch:"壓力",phr_en:"under pressure",phr_ch:"在壓力之下",eg_en:"She is working under a lot of pressure lately.",eg_ch:"她最近在很大的壓力下工作。",level:"英文"},
+{id:363,en:"participate",ch:"參加",phr_en:"participate in a competition",phr_ch:"參加比賽",eg_en:"More than 500 students participated in the competition.",eg_ch:"超過500名學生參加了這項比賽。",level:"英文"},
+{id:364,en:"significant",ch:"顯著的",phr_en:"a significant change",phr_ch:"顯著的改變",eg_en:"There has been a significant change in the weather.",eg_ch:"天氣發生了顯著的變化。",level:"英文"},
+{id:365,en:"emphasize",ch:"強調",phr_en:"emphasize the importance",phr_ch:"強調重要性",eg_en:"The doctor emphasized the importance of sleep.",eg_ch:"醫生強調了睡眠的重要性。",level:"英文"},
+{id:366,en:"patient",ch:"有耐心的",phr_en:"be patient with",phr_ch:"對...有耐心",eg_en:"Teachers need to be patient with their students.",eg_ch:"老師需要對學生有耐心。",level:"英文"},
+{id:367,en:"regular",ch:"規律的",phr_en:"regular exercise",phr_ch:"規律運動",eg_en:"Regular exercise is good for your health.",eg_ch:"規律運動對健康有好處。",level:"英文"},
+{id:368,en:"creative",ch:"有創意的",phr_en:"creative thinking",phr_ch:"創意發想",eg_en:"Creative thinking is essential in the design industry.",eg_ch:"創意發想在設計產業中至關重要。",level:"英文"},
+{id:369,en:"communicate",ch:"溝通",phr_en:"communicate with",phr_ch:"與...溝通",eg_en:"It is important to communicate with your parents.",eg_ch:"與父母溝通很重要。",level:"英文"},
+{id:370,en:"behavior",ch:"行為",phr_en:"bad behavior",phr_ch:"不良行為",eg_en:"The teacher will not tolerate bad behavior in class.",eg_ch:"老師不會容忍課堂上的不良行為。",level:"英文"},
+{id:371,en:"culture",ch:"文化",phr_en:"local culture",phr_ch:"當地文化",eg_en:"When traveling, I love learning about local culture.",eg_ch:"旅遊時，我喜歡了解當地文化。",level:"英文"},
+{id:372,en:"damage",ch:"損害",phr_en:"cause damage to",phr_ch:"對...造成損害",eg_en:"The storm caused serious damage to the house.",eg_ch:"暴風雨對房子造成了嚴重的損害。",level:"英文"},
+{id:373,en:"difference",ch:"差異",phr_en:"make a difference",phr_ch:"產生影響/差別",eg_en:"Even a small act of kindness can make a difference.",eg_ch:"即使是小小的善舉也能產生影響。",level:"英文"},
+{id:374,en:"effort",ch:"努力",phr_en:"make an effort",phr_ch:"付出努力",eg_en:"You should make an effort to improve your grades.",eg_ch:"你應該付出努力來進步成績。",level:"英文"},
+{id:375,en:"emotion",ch:"情緒",phr_en:"control your emotions",phr_ch:"控制情緒",eg_en:"It is hard to control your emotions when you are angry.",eg_ch:"生氣時很難控制自己的情緒。",level:"英文"},
+{id:376,en:"express",ch:"表達",phr_en:"express your feelings",phr_ch:"表達感受",eg_en:"Music is a great way to express your feelings.",eg_ch:"音樂是表達感受的好方法。",level:"英文"},
+{id:377,en:"freedom",ch:"自由",phr_en:"freedom of speech",phr_ch:"言論自由",eg_en:"Everyone should have freedom of speech.",eg_ch:"每個人都應該享有言論自由。",level:"英文"},
+{id:378,en:"government",ch:"政府",phr_en:"local government",phr_ch:"地方政府",eg_en:"The local government is building a new park.",eg_ch:"地方政府正在建造一個新公園。",level:"英文"},
+{id:379,en:"include",ch:"包含",phr_en:"include breakfast",phr_ch:"包含早餐",eg_en:"Does the room price include breakfast?",eg_ch:"房價包含早餐嗎？",level:"英文"},
+{id:380,en:"interest",ch:"興趣",phr_en:"show an interest in",phr_ch:"對...表現出興趣",eg_en:"Many students show an interest in coding.",eg_ch:"許多學生對編程表現出興趣。",level:"英文"},
+{id:381,en:"leader",ch:"領導者",phr_en:"a natural leader",phr_ch:"天生的領導者",eg_en:"He is a natural leader and everyone follows him.",eg_ch:"他是天生的領導者，每個人都追隨他。",level:"英文"},
+{id:382,en:"limit",ch:"限制",phr_en:"speed limit",phr_ch:"限速",eg_en:"You should drive within the speed limit.",eg_ch:"你應該在限速內駕駛。",level:"英文"},
+{id:383,en:"message",ch:"訊息",phr_en:"leave a message",phr_ch:"留言",eg_en:"You can leave a message if I don\'t answer.",eg_ch:"如果我沒接電話，你可以留言。",level:"英文"},
+{id:384,en:"performance",ch:"表演/表現",phr_en:"academic performance",phr_ch:"學業表現",eg_en:"His academic performance has improved this year.",eg_ch:"他今年的學業表現進步了。",level:"英文"},
+{id:385,en:"personal",ch:"個人的",phr_en:"personal space",phr_ch:"個人空間",eg_en:"Everyone needs some personal space sometimes.",eg_ch:"每個人有時都需要一些個人空間。",level:"英文"},
+{id:386,en:"physical",ch:"身體的",phr_en:"physical health",phr_ch:"身體健康",eg_en:"Exercise is essential for physical health.",eg_ch:"運動對身體健康至關重要。",level:"英文"},
+{id:387,en:"prepare",ch:"準備",phr_en:"prepare for",phr_ch:"為...做準備",eg_en:"I need to prepare for my final exams.",eg_ch:"我需要為期末考做準備。",level:"英文"},
+{id:388,en:"product",ch:"產品",phr_en:"new product",phr_ch:"新產品",eg_en:"The company is launching a new product next month.",eg_ch:"公司下個月將推出一項新產品。",level:"英文"},
+{id:389,en:"project",ch:"計畫/專案",phr_en:"work on a project",phr_ch:"致力於一項專案",eg_en:"They are working on a science project together.",eg_ch:"他們正在一起做一個科學專案。",level:"英文"},
+{id:390,en:"public",ch:"大眾/公共的",phr_en:"public transportation",phr_ch:"大眾運輸",eg_en:"Taking public transportation is eco-friendly.",eg_ch:"搭乘大眾運輸是很環保的。",level:"英文"},
+{id:391,en:"purpose",ch:"目的",phr_en:"on purpose",phr_ch:"故意地",eg_en:"I didn\'t break the vase on purpose.",eg_ch:"我不是故意打破花瓶的。",level:"英文"},
+{id:392,en:"quality",ch:"品質",phr_en:"high quality",phr_ch:"高品質",eg_en:"This shop is known for its high quality service.",eg_ch:"這家店以其高品質的服務聞名。",level:"英文"},
+{id:393,en:"recent",ch:"最近的",phr_en:"recent study",phr_ch:"最近的研究",eg_en:"A recent study shows that coffee is healthy.",eg_ch:"最近的一項研究顯示咖啡是健康的。",level:"英文"},
+{id:394,en:"relax",ch:"放鬆",phr_en:"relax and unwind",phr_ch:"放鬆身心",eg_en:"Watching a movie helps me relax and unwind.",eg_ch:"看電影幫助我放鬆身心。",level:"英文"},
+{id:395,en:"report",ch:"報告",phr_en:"weather report",phr_ch:"天氣報告",eg_en:"According to the weather report, it will rain tomorrow.",eg_ch:"根據天氣報告，明天會下雨。",level:"英文"},
+{id:396,en:"safety",ch:"安全",phr_en:"safety first",phr_ch:"安全第一",eg_en:"When you are driving, remember: safety first.",eg_ch:"開車時，記住：安全第一。",level:"英文"},
+{id:397,en:"science",ch:"科學",phr_en:"science fiction",phr_ch:"科幻小說",eg_en:"I love reading science fiction novels.",eg_ch:"我熱愛讀科幻小說。",level:"英文"},
+{id:398,en:"service",ch:"服務",phr_en:"customer service",phr_ch:"客服",eg_en:"If you have questions, call customer service.",eg_ch:"如果你有疑問，請撥打客服電話。",level:"英文"},
+{id:399,en:"society",ch:"社會",phr_en:"modern society",phr_ch:"現代社會",eg_en:"Mental health is a big issue in modern society.",eg_ch:"心理健康是現代社會的一大議題。",level:"英文"},
+{id:400,en:"system",ch:"系統",phr_en:"education system",phr_ch:"教育系統",eg_en:"The education system is changing every year.",eg_ch:"教育系統每年都在改變。",level:"英文"},
+{id:401,en:"temperature",ch:"溫度",phr_en:"room temperature",phr_ch:"室溫",eg_en:"Please keep the wine at room temperature.",eg_ch:"請將酒保存在室溫下。",level:"英文"},
+{id:402,en:"value",ch:"價值",phr_en:"family values",phr_ch:"家庭價值觀",eg_en:"Respect and honesty are important family values.",eg_ch:"尊重與誠實是重要的家庭價值觀。",level:"英文"},
+{id:403,en:"variety",ch:"多樣性",phr_en:"a wide variety of",phr_ch:"各式各樣的",eg_en:"The shop sells a wide variety of flowers.",eg_ch:"這家店販售各式各樣的花卉。",level:"英文"},
+{id:404,en:"view",ch:"觀點/景色",phr_en:"mountain view",phr_ch:"山景",eg_en:"The hotel room has a beautiful mountain view.",eg_ch:"這間飯店房間有美麗的山景。",level:"英文"},
+{id:405,en:"whole",ch:"整個的",phr_en:"the whole world",phr_ch:"全世界",eg_en:"His story touched the hearts of the whole world.",eg_ch:"他的故事感動了全世界的人。",level:"英文"},
+{id:406,en:"wonder",ch:"納悶/奇蹟",phr_en:"no wonder",phr_ch:"難怪",eg_en:"He studied hard; no wonder he got an A.",eg_ch:"他很努力；難怪他拿了A。",level:"英文"},
+{id:407,en:"worth",ch:"值得的",phr_en:"be worth visiting",phr_ch:"值得造訪",eg_en:"The museum is definitely worth visiting.",eg_ch:"這間博物館絕對值得造訪。",level:"英文"},
+{id:408,en:"young",ch:"年輕的",phr_en:"young generation",phr_ch:"年輕一代",eg_en:"Climate change is a big concern for the young generation.",eg_ch:"氣候變遷是年輕一代非常關心的事。",level:"英文"},
+{id:409,en:"ability",ch:"能力",phr_en:"ability to learn",phr_ch:"學習能力",eg_en:"Children have an amazing ability to learn languages.",eg_ch:"小孩有驚人的語言學習能力。",level:"英文"},
+{id:410,en:"accept",ch:"接受",phr_en:"accept an invitation",phr_ch:"接受邀請",eg_en:"She was happy to accept the invitation to the party.",eg_ch:"她很高興接受了派對的邀請。",level:"英文"},
+{id:411,en:"accident",ch:"意外",phr_en:"by accident",phr_ch:"意外地/偶然地",eg_en:"I met my old friend at the mall by accident.",eg_ch:"我在商場偶然遇到了我的老朋友。",level:"英文"}
+];
+
+const gradeGroups=[
+{name:"國中7年級",total:95,sub_levels:[{levelId:1,ids:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]},{levelId:2,ids:[21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40]},{levelId:3,ids:[41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60]},{levelId:4,ids:[61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]},{levelId:5,ids:[81,82,83,84,85,86,87,88,89,90,91,92,93,94,95]}]},
+{name:"國中8年級",total:94,sub_levels:[{levelId:6,ids:[96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115]},{levelId:7,ids:[116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135]},{levelId:8,ids:[136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155]},{levelId:9,ids:[156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175]},{levelId:10,ids:[176,177,178,179,180,181,182,183,184,185,186,187,188,189]}]},
+{name:"國中9年級",total:73,sub_levels:[{levelId:11,ids:[190,191,192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209]},{levelId:12,ids:[210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229]},{levelId:13,ids:[230,231,232,233,234,235,236,237,238,239,240,241,242,243,244,245,246,247,248,249]},{levelId:14,ids:[250,251,252,253,254,255,256,257,258,259,260,261,262]}]},
+{name:"高中",total:97,sub_levels:[{levelId:15,ids:[263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282]},{levelId:16,ids:[283,284,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302]},{levelId:17,ids:[303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322]},{levelId:18,ids:[323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342]},{levelId:19,ids:[343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359]}]},
+{name:"英文",total:52,sub_levels:[{levelId:20,ids:[360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,375,376,377,378,379]},{levelId:21,ids:[380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,399]},{levelId:22,ids:[400,401,402,403,404,405,406,407,408,409,410,411]}]}
+];
+
+const wordById = {};
+wordBank.forEach(w => wordById[w.id] = w);
+
+const gradeStyle = {
+  [gradeGroups[0].name]:{emoji:"🌱",bg:"#fce7f3",border:"#f472b6",bar:"#f9a8d4"},
+  [gradeGroups[1].name]:{emoji:"🌿",bg:"#e0f2fe",border:"#38bdf8",bar:"#7dd3fc"},
+  [gradeGroups[2].name]:{emoji:"🌳",bg:"#dcfce7",border:"#4ade80",bar:"#86efac"},
+  [gradeGroups[3].name]:{emoji:"⭐",bg:"#fef9c3",border:"#facc15",bar:"#fde047"},
+  [gradeGroups[4].name]:{emoji:"🏅",bg:"#ede9fe",border:"#a78bfa",bar:"#c4b5fd"}
+};
+
+// ── Firebase ─────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyD7WB1ENetKGls4CsGzS3JI4YBSXkSirTI",
+  authDomain: "my-web-tools-ce4ea.firebaseapp.com",
+  projectId: "my-web-tools-ce4ea",
+  storageBucket: "my-web-tools-ce4ea.firebasestorage.app",
+  messagingSenderId: "233324628330",
+  appId: "1:233324628330:web:d34f1295af4849bae03d13"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+const APP_ID = 'oumei001';
+
+let currentUser = null;
+let userProgress = {}, srsData = {}, userName = '';
+
+const userDocRef = () => doc(db,'artifacts',APP_ID,'users',currentUser.uid,'settings','main');
+
+const loadUserData = async () => {
+  if (!currentUser) return;
+  try {
+    const d = await getDoc(userDocRef());
+    if (d.exists()) {
+      userProgress = d.data().progress || {};
+      srsData      = d.data().srs      || {};
+      if (d.data().name && !userName) userName = d.data().name;
+    }
+  } catch(e) { console.warn('load failed', e); }
+};
+
+const saveUserData = async () => {
+  if (!currentUser) return;
+  try {
+    await setDoc(userDocRef(), {
+      name: userName, progress: userProgress, srs: srsData, updatedAt: Date.now()
+    }, { merge: true });
+  } catch(e) { console.warn('save failed', e); }
+};
+
+// ── Auth init ─────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  if (user) {
+    await loadUserData();
+    // Check if name already set (returning user)
+    const stored = localStorage.getItem('oumei001_name');
+    if (stored) {
+      userName = stored;
+      vm.enterApp();
+    }
+    // else: wait for user to type name in login screen
+  }
+});
+
+signInAnonymously(auth);
+
+// ── App ───────────────────────────────────────────────────────
+window.vm = {
+  currentIndex:0, score:0, questions:[], currentWord:null, isAnswered:false, currentLevel:null,
+
+  startWithName() {
+    const val = document.getElementById('name-input').value.trim();
+    if (!val) { document.getElementById('login-error').classList.remove('hidden'); return; }
+    userName = val;
+    localStorage.setItem('oumei001_name', val);
+    saveUserData();
+    this.enterApp();
+  },
+
+  enterApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('user-info').innerText = '👤 ' + userName;
+    this.showHome();
+  },
+
+  confirmLogout() {
+    if (confirm(`登出「${userName}」？
+（進度已儲存，下次可重新登入）`)) {
+      localStorage.removeItem('oumei001_name');
+      location.reload();
+    }
+  },
+
+  speak(text, cb) {
+    if (!text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.9;
+    if (cb) u.onend = cb;
+    window.speechSynthesis.speak(u);
+  },
+
+  showHome() {
+    const main = document.getElementById('main-content');
+    const wrongIds = Object.keys(srsData).filter(id => srsData[id].isWrong);
+    const mastered = Object.values(userProgress).filter(v => v >= 18).length;
+
+    let gradesHtml = '';
+    gradeGroups.forEach(grade => {
+      const st = gradeStyle[grade.name] || {emoji:'📚',bg:'#f3f4f6',border:'#9ca3af',bar:'#d1d5db'};
+      let lvHtml = '';
+      grade.sub_levels.forEach((sl, i) => {
+        const prog  = userProgress[sl.levelId] || 0;
+        const total = sl.ids.length;
+        const pct   = Math.round(prog/total*100);
+        const icon  = prog >= total*.9 ? '🏆' : prog >= total*.5 ? '⭐' : '🎒';
+        lvHtml += `<div class="level-chip" onclick="vm.startLevel(${sl.levelId})">
+          <div class="text-xl">${icon}</div>
+          <div class="text-[11px] font-bold mt-0.5 text-center leading-tight">${grade.name.replace('年級','')} #${i+1}</div>
+          <div class="text-[10px] text-gray-400">${prog}/${total}</div>
+          <div class="pb-outer"><div class="pb-inner" style="width:${pct}%;background:${st.bar}"></div></div>
+        </div>`;
+      });
+      gradesHtml += `<div class="grade-section border-2" style="border-color:${st.border};background:${st.bg}">
+        <div class="grade-header" style="background:${st.border}33">
+          <span class="text-2xl">${st.emoji}</span><span>${grade.name}</span>
+          <span class="text-sm font-normal text-gray-500 ml-auto">${grade.sub_levels.length} 關卡 · ${grade.total} 個單字</span>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 p-3">${lvHtml}</div>
+      </div>`;
+    });
+
+    main.innerHTML = `
+      <div class="flex gap-3 mb-5 flex-wrap">
+        <div class="retro-card px-4 py-3 rounded-2xl flex items-center gap-2 cursor-default">
+          <span class="text-xl">📚</span>
+          <div><div class="text-xs text-gray-400">總單字</div><div class="font-bold text-lg">${wordBank.length}</div></div>
+        </div>
+        <div class="retro-card px-4 py-3 rounded-2xl flex items-center gap-2 cursor-default">
+          <span class="text-xl">🏆</span>
+          <div><div class="text-xs text-gray-400">已通關</div><div class="font-bold text-lg">${mastered} 關</div></div>
+        </div>
+        ${wrongIds.length > 0 ? `<div class="retro-card px-4 py-3 rounded-2xl flex items-center gap-2 cursor-pointer" style="border-color:#facc15" onclick="vm.startReview()">
+          <span class="text-xl sparkle">🧠</span>
+          <div><div class="text-xs text-gray-400">待複習</div><div class="font-bold text-lg text-yellow-600">${wrongIds.length} 字</div></div>
+        </div>` : ''}
+      </div>
+      ${gradesHtml}`;
+  },
+
+  getLevelWords(levelId) {
+    for (const g of gradeGroups)
+      for (const sl of g.sub_levels)
+        if (sl.levelId === levelId)
+          return sl.ids.map(id => wordById[id]).filter(Boolean);
+    return [];
+  },
+
+  startLevel(levelId) {
+    this.currentLevel = levelId;
+    this.questions = this.getLevelWords(levelId);
+    this.currentIndex = 0; this.score = 0;
+    this.renderQuiz();
+  },
+
+  startReview() {
+    const wrongIds = Object.keys(srsData).filter(id => srsData[id].isWrong);
+    this.questions = wrongIds.map(id => wordById[id]).filter(Boolean);
+    if (!this.questions.length) { this.showHome(); return; }
+    this.currentLevel = 'review';
+    this.currentIndex = 0; this.score = 0;
+    this.renderQuiz();
+  },
+
+  renderQuiz() {
+    this.isAnswered = false;
+    const word = this.questions[this.currentIndex];
+    this.currentWord = word;
+    const main = document.getElementById('main-content');
+
+    let opts = [word.ch];
+    const pool = wordBank.filter(w => w.ch !== word.ch);
+    for (let t=0; opts.length<4 && t<300; t++) {
+      const r = pool[Math.floor(Math.random()*pool.length)].ch;
+      if (!opts.includes(r)) opts.push(r);
+    }
+    opts.sort(() => Math.random()-.5);
+
+    const safeEn = word.en.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const lvLbl  = this.currentLevel==='review' ? '✏️ 複習' : `📖 第 ${this.currentLevel} 關`;
+    const pct    = (this.currentIndex/this.questions.length*100).toFixed(0);
+
+    main.innerHTML = `
+      <div class="flex justify-between items-center mb-3">
+        <button class="font-bold text-gray-400 hover:text-pink-500 text-sm" onclick="vm.showHome()">🏠 回首頁</button>
+        <div class="bg-white px-4 py-1 border-2 border-black rounded-full font-bold text-sm">${lvLbl} · ${this.currentIndex+1}/${this.questions.length}</div>
+        <div class="text-sm font-bold text-pink-400">⭐ ${this.score}</div>
+      </div>
+      <div class="w-full bg-gray-100 h-2 rounded-full mb-5 overflow-hidden">
+        <div class="bg-pink-300 h-full rounded-full transition-all duration-500" style="width:${pct}%"></div>
+      </div>
+      <div class="retro-card p-8 rounded-3xl bg-white text-center mb-4">
+        <div class="flex justify-center mb-4">
+          <button class="w-16 h-16 bg-pink-50 rounded-full text-3xl hover:scale-110 transition" style="border:3px solid black" onclick="vm.speak('${safeEn}')">🔊</button>
+        </div>
+        <h2 class="quiz-word font-bold text-pink-500 mb-8 tracking-tight">${word.en}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="options-box">
+          ${opts.map(o => `<button class="option-btn" onclick="vm.checkAnswer(this,'${o.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">${o}</button>`).join('')}
+        </div>
+      </div>
+      <div id="feedback" class="hidden"></div>`;
+
+    setTimeout(() => this.speak(word.en), 400);
+  },
+
+  checkAnswer(btn, choice) {
+    if (this.isAnswered) return;
+    this.isAnswered = true;
+    const isOK = choice === this.currentWord.ch;
+    const feedback = document.getElementById('feedback');
+    const optBox   = document.getElementById('options-box');
+
+    Array.from(optBox.children).forEach(b => {
+      b.disabled = true;
+      if (b.innerText.trim() === this.currentWord.ch) b.classList.add('correct');
+    });
+    if (isOK) { this.score++; if (srsData[this.currentWord.id]) srsData[this.currentWord.id].isWrong=false; }
+    else       { btn.classList.add('wrong'); srsData[this.currentWord.id]={isWrong:true}; }
+
+    const w = this.currentWord;
+    const sp = s => s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    feedback.innerHTML = `
+      <div class="retro-card p-5 rounded-3xl bg-white space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="text-3xl">${isOK?'🌟':'💡'}</span>
+          <h3 class="text-xl font-bold ${isOK?'text-green-500':'text-red-500'}">${isOK?'太棒了！完全正確 🎉':'正確答案是：'+w.ch}</h3>
+        </div>
+        <div class="bg-pink-50 p-4 rounded-2xl border-2 border-dashed border-pink-200 space-y-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full">PHRASE 片語</span>
+              <button class="audio-btn" onclick="vm.speak('${sp(w.phr_en)}')">🔊</button>
+            </div>
+            <p class="text-lg font-bold text-gray-700">"${w.phr_en}"</p>
+            <p class="text-sm text-gray-400 font-bold">${w.phr_ch}</p>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-bold text-pink-500 bg-pink-100 px-2 py-0.5 rounded-full">EXAMPLE 例句</span>
+              <button class="audio-btn" onclick="vm.speak('${sp(w.eg_en)}')">🔊</button>
+            </div>
+            <p class="text-base text-gray-600 font-medium">${w.eg_en}</p>
+            <p class="text-sm text-gray-400">${w.eg_ch}</p>
+          </div>
+        </div>
+        <button class="retro-btn w-full py-4 rounded-2xl text-white text-lg" onclick="vm.next()">下一題 ➔</button>
+      </div>`;
+    feedback.classList.remove('hidden');
+    this.speak(w.en, ()=>setTimeout(()=>this.speak(w.phr_en,()=>setTimeout(()=>this.speak(w.eg_en),500)),500));
+  },
+
+  next() {
+    this.currentIndex++;
+    if (this.currentIndex < this.questions.length) this.renderQuiz();
+    else this.finish();
+  },
+
+  finish() {
+    const main = document.getElementById('main-content');
+    if (typeof this.currentLevel==='number') {
+      const old = userProgress[this.currentLevel]||0;
+      if (this.score>old) userProgress[this.currentLevel]=this.score;
+    }
+    saveUserData();
+    const pct=Math.round(this.score/this.questions.length*100);
+    const emoji=pct===100?'🎊':pct>=80?'🎉':'💪';
+    const msg=pct===100?'完美滿分！🌟':pct>=80?'表現很棒！繼續加油！':'繼續努力，你可以的！';
+    main.innerHTML=`
+      <div class="retro-card p-10 rounded-3xl text-center bg-white floating">
+        <div class="text-6xl mb-4">${emoji}</div>
+        <h2 class="text-3xl font-bold text-pink-500 mb-1">測驗完成！</h2>
+        <p class="text-gray-400 mb-4">${msg}</p>
+        <p class="text-2xl font-bold mb-6 text-gray-500">得分: <span class="text-pink-500 text-5xl">${this.score}</span>/${this.questions.length}</p>
+        <div class="flex gap-3 justify-center flex-wrap">
+          <button class="retro-btn px-8 py-3 rounded-full text-white font-bold" onclick="vm.startLevel(vm.currentLevel)">再挑戰 🔄</button>
+          <button class="retro-btn px-8 py-3 rounded-full text-white font-bold" style="background:#90f1ef" onclick="vm.showHome()">返回大廳 🏠</button>
+        </div>
+      </div>`;
+  }
+};
+
+// Enter on name input
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') vm.startWithName();
+});
+</script>
+</body>
+</html>
