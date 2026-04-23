@@ -71,7 +71,6 @@ body{font-family:'Quicksand','Noto Sans TC',sans-serif;background:linear-gradien
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // ── 資料 ──────────────────────────────────────────────────────
@@ -509,6 +508,7 @@ const gradeStyle = {
 };
 
 // ── Firebase ─────────────────────────────────────────────────
+// 資料以「使用者名字」為 key，不依賴 Auth UID
 const firebaseConfig = {
   apiKey: "AIzaSyD7WB1ENetKGls4CsGzS3JI4YBSXkSirTI",
   authDomain: "my-web-tools-ce4ea.firebaseapp.com",
@@ -518,63 +518,52 @@ const firebaseConfig = {
   appId: "1:233324628330:web:d34f1295af4849bae03d13"
 };
 const fbApp = initializeApp(firebaseConfig);
-const auth  = getAuth(fbApp);
 const db    = getFirestore(fbApp);
 const APP_ID = 'oumei001';
 
-let currentUser = null;
 let userProgress = {}, srsData = {}, userName = '';
 
-const userDocRef = () => doc(db,'artifacts',APP_ID,'users',currentUser.uid,'settings','main');
+const userDocRef = () =>
+  doc(db, 'artifacts', APP_ID, 'users', encodeURIComponent(userName), 'settings', 'main');
 
 const loadUserData = async () => {
-  if (!currentUser) return;
+  if (!userName) return;
   try {
     const d = await getDoc(userDocRef());
     if (d.exists()) {
       userProgress = d.data().progress || {};
       srsData      = d.data().srs      || {};
-      if (d.data().name && !userName) userName = d.data().name;
     }
   } catch(e) { console.warn('load failed', e); }
 };
 
-const saveUserData = async () => {
-  if (!currentUser) return;
-  try {
-    await setDoc(userDocRef(), {
-      name: userName, progress: userProgress, srs: srsData, updatedAt: Date.now()
-    }, { merge: true });
-  } catch(e) { console.warn('save failed', e); }
+const saveUserData = () => {
+  if (!userName) return;
+  setDoc(userDocRef(), {
+    name: userName, progress: userProgress, srs: srsData, updatedAt: Date.now()
+  }, { merge: true }).catch(e => console.warn('save failed', e));
 };
 
-// ── Auth init ─────────────────────────────────────────────────
-onAuthStateChanged(auth, async user => {
-  currentUser = user;
-  if (user) {
+// ── 回訪使用者自動登入 ────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  const stored = localStorage.getItem('oumei001_name');
+  if (stored) {
+    userName = stored;
     await loadUserData();
-    // Check if name already set (returning user)
-    const stored = localStorage.getItem('oumei001_name');
-    if (stored) {
-      userName = stored;
-      vm.enterApp();
-    }
-    // else: wait for user to type name in login screen
+    vm.enterApp();
   }
 });
-
-signInAnonymously(auth);
 
 // ── App ───────────────────────────────────────────────────────
 window.vm = {
   currentIndex:0, score:0, questions:[], currentWord:null, isAnswered:false, currentLevel:null,
 
-  startWithName() {
+  async startWithName() {
     const val = document.getElementById('name-input').value.trim();
     if (!val) { document.getElementById('login-error').classList.remove('hidden'); return; }
     userName = val;
     localStorage.setItem('oumei001_name', val);
-    saveUserData();
+    await loadUserData();   // 載入該名字的既有進度
     this.enterApp();
   },
 
